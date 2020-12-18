@@ -1,0 +1,8 @@
+name: LicensePlateReconstructor
+channels:
+  - defaults
+dependencies:
+  - python=3.8
+  - pillow
+  - jupyter
+  - numpy
