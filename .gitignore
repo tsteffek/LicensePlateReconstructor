@@ -320,7 +320,7 @@ dmypy.json
 # pytype static type analyzer
 .pytype/
 
-# profiling data
+# profiling image_gen
 .prof
 
 # End of https://www.toptal.com/developers/gitignore/api/intellij,pycharm,python,jupyternotebooks
