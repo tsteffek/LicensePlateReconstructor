@@ -1,0 +1,36 @@
+name: Test & Publish
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+env:
+  IMAGE_NAME: ${{ secrets.DOCKER_REGISTRY }}/datexis/${{ github.event.repository.name }}:${{ github.sha }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout code base
+        uses: actions/checkout@v2
+
+      - name: Transform image name to lower case
+        id: lowercase
+        run: echo "::set-output name=image_name::$(echo $IMAGE_NAME | tr '[A-Z]' '[a-z]')"
+
+      - name: Build image
+        run: docker build -t ${{ steps.lowercase.outputs.image_name }} .
+
+      - name: Run tests within image
+        run: docker run ${{ steps.lowercase.outputs.image_name }} python -m unittest discover tests/
+
+      - name: Log into registry
+        # if: github.event.name == 'push'
+        run: echo ${{ secrets.DOCKER_REGISTRY_PASSPHRASE }} | docker login ${{ secrets.DOCKER_REGISTRY }} -u ${{ secrets.DOCKER_REGISTRY_USER }} --password-stdin
+
+      - name: Push image
+        # if: github.event.name == 'push'
+        run: docker push ${{ steps.lowercase.outputs.image_name }}
