@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Dict
 
 from PIL import ImageFont
 from PIL.ImageFont import FreeTypeFont
@@ -36,6 +36,14 @@ class Language:
 
     def __hash__(self):
         return hash(self.name)
+
+    @classmethod
+    def parse_obj(cls, obj):
+        obj_id = obj['id']
+        del obj['id']
+        language = cls(**obj)
+        language.id = obj_id
+        return language
 
 
 class FontCache:
