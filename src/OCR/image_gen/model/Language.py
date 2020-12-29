@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Dict
+from typing import List
 
 from PIL import ImageFont
 from PIL.ImageFont import FreeTypeFont

@@ -10,7 +10,7 @@ from torch.utils.data import Dataset, DataLoader
 
 from src.OCR import IO
 from src.OCR.data.model.Vocabulary import Vocabulary
-from src.OCR.image_gen.model.Text import Character, Text, TextImage
+from src.OCR.image_gen.model.Text import Text, TextImage
 
 
 class GeneratedImages(Dataset):
@@ -27,10 +27,9 @@ class GeneratedImages(Dataset):
 
     def __getitem__(self, item) -> Tuple[Tensor, Tuple[Text, Tensor]]:
         image_path = self.images[item]
-        txt_image = TextImage.load(image_path, self.vocab.languages)
-        txt, img, _ = txt_image
-        label = self.vocab.encode_text(txt_image.text)
-        return to_torch_format(txt_image.img), (txt_image.text, torch.tensor(label, dtype=torch.int64))
+        text, img, _ = TextImage.load(image_path, self.vocab.languages)
+        labels = self.vocab.encode_text(text)
+        return to_torch_format(img), (text, torch.tensor(labels, dtype=torch.int64))
 
     def __len__(self):
         return len(self.images)

@@ -48,7 +48,7 @@ class Text:
 
     @classmethod
     def from_string(cls, string: str, languages: Dict[int, Language]):
-        if string == '':
+        if len(string) == 0:
             return cls()
 
         char_strings = string.split('_')
@@ -114,4 +114,4 @@ class TextImage:
         img = IO.load_image(path)
         text = Text.from_string(text_str, languages)
 
-        return cls(text, img, None)
+        return cls(text, img, img_type)
