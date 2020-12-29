@@ -8,7 +8,7 @@ from numpy import ndarray, array
 
 from src.OCR.image_gen.model import Images
 from src.OCR.image_gen.model.Language import Language, FontCache
-from src.OCR.image_gen.model.Text import Text, TextImage, Character
+from src.OCR.image_gen.model.Text import TextImage, Character, ImageText
 
 rng = np.random.default_rng(42)
 
@@ -96,15 +96,18 @@ class RandomTextGenerator:
         num_chars_per_language = array([len(chars) for chars in self.languages])
         return num_chars_per_language / sum(num_chars_per_language)
 
-    def __call__(self) -> Generator[Text, None, None]:
+    def __call__(self) -> Generator[ImageText, None, None]:
         if self.random_num:
             while True:
-                languages = choice(self.languages, rng.integers(self.char_num), self.char_language_distribution())
-                yield Text([self.char_rngs[lang]() for lang in languages])
+                yield self.pick_random_text(rng.integers(self.char_num))
         else:
             while True:
-                languages = choice(self.languages, self.char_num, self.char_language_distribution())
-                yield Text([self.char_rngs[lang]() for lang in languages])
+                yield self.pick_random_text(self.char_num)
+
+    def pick_random_text(self, char_num):
+        random_languages = choice(self.languages, char_num, self.char_language_distribution())
+        random_characters = zip(*[self.char_rngs[lang]() for lang in random_languages])
+        return ImageText(*random_characters)
 
 
 class RandomTextImageGenerator:
