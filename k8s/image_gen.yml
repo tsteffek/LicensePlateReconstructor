@@ -1,0 +1,33 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ocr-image-gen
+spec:
+  template:
+    metadata:
+      labels:
+        app: ocr-image-gen
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: lpr
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:7319fbdcfb21c8d06d0d72f16e057b3218deae4e
+          command: [ "python" ]
+          args: [ "bin/GenerateImages.py", "--save_dir ./images", "--num_train 300000", "--num_test 10000", "--num_val 10000" ]
+          resources:
+            requests:
+              cpu: 1
+              memory: 50Gi
+            limits:
+              memory: 100Gi
+          volumeMounts:
+            - name: ocr-images
+              mountPath: ./images/
+      volumes:
+        - name: ocr-images
+          persistentVolumeClaim:
+            claimName: ocr-images-pvc
+      imagePullSecrets:
+        - name: private-registry-auth
+      nodeSelector:
+        cpu: epyc-7542

@@ -8,12 +8,12 @@ from src.OCR.image_gen.RNG import RandomTextGenerator, RandomTextImageGenerator
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--save_dir', help='Location of generated images', type=str)
+    parser.add_argument('--save_dir', help='Location of generated images', type=str, required=True)
     parser.add_argument('--width', help='Width of generated images', type=int, default=800 * 4)
     parser.add_argument('--height', help='Height of generated images', type=int, default=128 * 4)
     parser.add_argument('--num_train', help='Number of generated train images', type=int, default=1000)
-    parser.add_argument('--num_test', help='Number of generated test images', type=int, default=1000)
-    parser.add_argument('--num_val', help='Number of generated val images', type=int, default=1000)
+    parser.add_argument('--num_test', help='Number of generated test images', type=int, default=0)
+    parser.add_argument('--num_val', help='Number of generated val images', type=int, default=0)
     parser.add_argument('--logging', help='Logging step', type=float, default=0.1)
 
     args = parser.parse_args()

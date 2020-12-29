@@ -1,5 +1,6 @@
 import glob
 import json
+import logging
 import os
 from os import path
 from pathlib import Path
@@ -9,9 +10,12 @@ from PIL import Image
 
 from src.OCR.image_gen.model.Language import Language
 
-ROOT_DIR = '../'
-
-DATA_PATH = Path(os.path.join(ROOT_DIR, 'data'))
+DATA_PATH = Path(os.getcwd()) / 'data'
+if not DATA_PATH.exists():
+    DATA_PATH = Path('..') / 'data'
+if not DATA_PATH.exists():
+    logging.warning('data folder not found.')
+    exit(1)
 
 
 def create_path(*paths) -> Path:
@@ -31,6 +35,7 @@ def read_json(file_name: str, data_path: Path = DATA_PATH) -> Any:
 
 def read_languages(data_path: str = DATA_PATH):
     languages = find_language_names(data_path)
+    logging.warning(f'Detected {len(languages)} languages in {data_path}: {languages}')
     fonts = {lang: read_font_paths(data_path, lang) for lang in languages}
     chars = {lang: read_chars(data_path, lang) for lang in languages}
     return [Language(language, chars[language], fonts[language]) for language in languages]

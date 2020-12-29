@@ -1,8 +1,13 @@
 name: LicensePlateReconstructor
 channels:
   - defaults
+  - conda-forge
+  - pytorch
 dependencies:
   - python=3.8
-  - pillow
+  - pytorch=1.7
+  - cudatoolkit=11.0
   - jupyter
   - numpy
+  - pillow
+  - pytorch-lightning

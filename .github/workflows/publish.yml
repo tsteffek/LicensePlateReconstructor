@@ -1,13 +1,13 @@
-name: Test & Publish
+name: Publish
 
 on:
   pull_request:
   push:
     branches:
-      - master
+      - main
 
 env:
-  IMAGE_NAME: ${{ secrets.DOCKER_REGISTRY }}/datexis/${{ github.event.repository.name }}:${{ github.sha }}
+  IMAGE_NAME: ${{ secrets.DOCKER_REGISTRY }}/tsteffek/${{ github.event.repository.name }}:${{ github.sha }}
 
 jobs:
   build:
@@ -24,8 +24,8 @@ jobs:
       - name: Build image
         run: docker build -t ${{ steps.lowercase.outputs.image_name }} .
 
-      - name: Run tests within image
-        run: docker run ${{ steps.lowercase.outputs.image_name }} python -m unittest discover tests/
+#      - name: Run tests within image
+#        run: docker run ${{ steps.lowercase.outputs.image_name }} python -m unittest discover tests/
 
       - name: Log into registry
         # if: github.event.name == 'push'
