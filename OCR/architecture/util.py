@@ -1,8 +1,13 @@
+import logging
+from typing import Iterable
+
 import torch
 from torch import Tensor
 from torch import nn
 
-from src.OCR.data.model.Vocabulary import Vocabulary
+from OCR.data.model.Vocabulary import Vocabulary
+
+log = logging.getLogger(__name__)
 
 
 class Img2Seq(nn.Module):
@@ -33,7 +38,10 @@ class ConfusionMatrix:
 
     def print(self, vocab: Vocabulary):
         chars = vocab.noisy_chars
-        print('\n \t' + '\t'.join(chars))
+        log.info('\n \t' + '\t'.join(chars))
         for idx, char in enumerate(chars):
-            l = map(str, map(Tensor.item, list(self.mat[idx])))
-            print(f'{char}\t' + '\t'.join(l))
+            log.info(f'{char}\t' + '\t'.join(tensor_to_list(self.mat[idx])))
+
+
+def tensor_to_list(t: Tensor) -> Iterable[str]:
+    return map(str, map(Tensor.item, list(t)))

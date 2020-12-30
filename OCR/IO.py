@@ -8,14 +8,15 @@ from typing import Dict, List, Any
 
 from PIL import Image
 
-from src.OCR.image_gen.model.Language import Language
+from OCR.image_gen.model.Language import Language
+
+log = logging.getLogger(__name__)
 
 DATA_PATH = Path(os.getcwd()) / 'data'
 if not DATA_PATH.exists():
-    DATA_PATH = Path('..') / 'data'
+    DATA_PATH = Path('../') / 'data'
 if not DATA_PATH.exists():
-    logging.warning('data folder not found.')
-    exit(1)
+    raise IOError('data folder not found')
 
 
 def create_path(*paths) -> Path:
@@ -35,7 +36,7 @@ def read_json(file_name: str, data_path: Path = DATA_PATH) -> Any:
 
 def read_languages(data_path: str = DATA_PATH):
     languages = find_language_names(data_path)
-    logging.warning(f'Detected {len(languages)} languages in {data_path}: {languages}')
+    log.info(f'Detected {len(languages)} languages in {data_path}: {languages}')
     fonts = {lang: read_font_paths(data_path, lang) for lang in languages}
     chars = {lang: read_chars(data_path, lang) for lang in languages}
     return [Language(language, chars[language], fonts[language]) for language in languages]

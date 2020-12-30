@@ -1,10 +1,14 @@
 import argparse
 import dataclasses
 import json
+import logging
 from time import process_time
 
-from src.OCR.IO import read_languages, create_path
-from src.OCR.image_gen.RNG import RandomTextGenerator, RandomTextImageGenerator
+from OCR.IO import read_languages, create_path
+from OCR.image_gen.RNG import RandomTextGenerator, RandomTextImageGenerator
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -26,6 +30,7 @@ if __name__ == '__main__':
     root = args.save_dir
 
     with open(create_path(root) / 'languages.json', 'w+') as fh:
+        log.info('Dumping language.json...')
         json.dump([dataclasses.asdict(lang) for lang in languages], fh)
 
     datasets = ['train', 'test', 'val']
@@ -35,15 +40,14 @@ if __name__ == '__main__':
     for dataset, num in zip(datasets, nums):
         dataset_path = create_path(root, dataset)
         logging_step = num * args.logging
-        print(f'{dataset}: writing {num} images to {dataset_path}')
+        log.info(f'Writing {num} {dataset} images to path {dataset_path}...')
         for idx, text_img in enumerate(img_rng_gen(), start=1):
             path = create_path(dataset_path, str(len(text_img.text)), text_img.img_type)
             text_img.img.save(str(path / f'{text_img.to_string()}.jpg'))
 
             if idx % logging_step == 0:
                 elapsed = process_time() - start
-                print(idx)
-                print(dataset, idx, elapsed, elapsed / idx)
+                log.info(dataset, idx, elapsed, elapsed / idx)
 
             if idx == num:
                 break

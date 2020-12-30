@@ -1,12 +1,17 @@
 import argparse
+import logging
 
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint
 
-from src.OCR.architecture.CharacterRecognizer import CharacterRecognizer
-from src.OCR.data.GeneratedImages import GeneratedImagesDataModule
+from OCR.architecture.CharacterRecognizer import CharacterRecognizer
+from OCR.data.GeneratedImages import GeneratedImagesDataModule
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
 if __name__ == '__main__':
+    log.info('test')
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_dir', help='Location of images', type=str)
     parser = Trainer.add_argparse_args(parser)

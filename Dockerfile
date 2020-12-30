@@ -10,4 +10,4 @@ COPY data/ data/
 COPY bin/ bin/
 COPY src/ src/
 
-ENV PYTHONPATH="$PYTHONPATH:/src"
+ENV PYTHONPATH="$PYTHONPATH:/OCR:/LPR"

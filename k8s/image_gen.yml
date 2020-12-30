@@ -11,9 +11,9 @@ spec:
       restartPolicy: Never
       containers:
         - name: lpr
-          image: registry.datexis.com/tsteffek/licenseplatereconstructor:7319fbdcfb21c8d06d0d72f16e057b3218deae4e
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:8390301a936a4c911dc4fe43a021bf673676d78c
           command: [ "python" ]
-          args: [ "bin/GenerateImages.py", "--save_dir ./images", "--num_train 300000", "--num_test 10000", "--num_val 10000" ]
+          args: [ "bin/GenerateImages.py", "--save_dir", "./images", "--num_train", "300000", "--num_test", "10000", "--num_val", "10000" ]
           resources:
             requests:
               cpu: 1
