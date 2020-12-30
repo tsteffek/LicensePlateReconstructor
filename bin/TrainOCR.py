@@ -11,9 +11,10 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 if __name__ == '__main__':
-    log.info('test')
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_dir', help='Location of images', type=str)
+    parser.add_argument('--batch_size', help='batch size for training', type=int, default=8)
+    parser.add_argument('--multi_core', help='whether to use multiple cores', type=bool, default=True)
     parser = Trainer.add_argparse_args(parser)
 
     args = parser.parse_args()
@@ -21,7 +22,7 @@ if __name__ == '__main__':
     # chkpt_config = ModelCheckpoint(monitor='train_loss', save_top_k=10, save_last=True, verbose=True)
     chkpt_config = ModelCheckpoint(save_last=True, verbose=True)
 
-    datamodule = GeneratedImagesDataModule(args.data_dir, 8, multi_core=False)
+    datamodule = GeneratedImagesDataModule(args.data_dir, args.batch_size, multi_core=args.multi_core)
     datamodule.setup()
     model = CharacterRecognizer(datamodule.vocab, datamodule.size)
     trainer = Trainer.from_argparse_args(args, callbacks=[chkpt_config])

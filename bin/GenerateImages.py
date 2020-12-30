@@ -47,7 +47,7 @@ if __name__ == '__main__':
 
             if idx % logging_step == 0:
                 elapsed = process_time() - start
-                log.info(dataset, idx, elapsed, elapsed / idx)
+                log.info('%s: %i; seconds since start: %f, s/element: %f', dataset, idx, elapsed, elapsed / idx)
 
             if idx == num:
                 break

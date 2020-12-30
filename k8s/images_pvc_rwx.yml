@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ocr-images-pvc-rwx
+spec:
+  dataSource:
+    name: ocr-images-pvc
+    kind: PersistentVolumeClaim
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi

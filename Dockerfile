@@ -8,6 +8,7 @@ RUN pip install pytorch-lightning numpy jupyter pillow && \
 
 COPY data/ data/
 COPY bin/ bin/
-COPY src/ src/
+COPY OCR/ OCR/
+COPY LPR/ LPR/
 
 ENV PYTHONPATH="$PYTHONPATH:/OCR:/LPR"

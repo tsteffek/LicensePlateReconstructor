@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ocr-image-gen
+spec:
+  template:
+    metadata:
+      labels:
+        app: ocr-image-gen
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: lpr
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:latest
+          command: [ "python" ]
+          args: [ "bin/TrainOCR.py", "--data_dir", "./images", "--weights_summary", "full", "--auto_lr_find", "--auto_scale_batch_size", "--flush_logs_every_n_step", "10000", "--max_epochs", "10", "--default_root_dir", "./models/default"]
+          resources:
+            requests:
+              gpu: 1
+              memory: 50Gi
+            limits:
+              memory: 100Gi
+        volumeMounts:
+          - name: ocr-images
+            mountPath: ./images/
+         - name: ocr-models
+         mountPath: ./models/
+      volumes:
+        - name: ocr-images
+          persistentVolumeClaim:
+          claimName: ocr-images-pvc-rwx
+        - name: ocr-models
+          persistentVolumeClaim:
+          claimName: ocr-models-pvc
+      imagePullSecrets:
+        - name: private-registry-auth
+      nodeSelector:
+        cpu: a100
