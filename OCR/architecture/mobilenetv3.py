@@ -19,6 +19,7 @@ Haoshuang Wang. (2020).
 PP-OCR: A Practical Ultra Lightweight OCR System
 https://arxiv.org/abs/2009.09941v3
 """
+from typing import Tuple, Union
 
 import torch.nn as nn
 import math
@@ -82,17 +83,9 @@ class SELayer(nn.Module):
         return x * y
 
 
-def conv_3x3_bn(inp, oup, stride):
+def conv_bn(inp, oup, shape, stride, padding):
     return nn.Sequential(
-        nn.Conv2d(inp, oup, (12, 3), stride, 1, bias=False),
-        nn.BatchNorm2d(oup),
-        h_swish()
-    )
-
-
-def conv_1x1_bn(inp, oup):
-    return nn.Sequential(
-        nn.Conv2d(inp, oup, 1, 1, 0, bias=False),
+        nn.Conv2d(inp, oup, shape, stride, padding, bias=False),
         nn.BatchNorm2d(oup),
         h_swish()
     )
@@ -144,7 +137,11 @@ class InvertedResidual(nn.Module):
 
 
 class MobileNetV3(nn.Module):
-    def __init__(self, cfgs, mode, num_classes=1000, width_mult=1.):
+    def __init__(
+            self, cfgs, mode, width_mult=1.,
+            first_filter_shape: Union[Tuple[int, int], int] = 3,
+            first_filter_stride: Union[Tuple[int, int], int] = 2
+    ):
         super(MobileNetV3, self).__init__()
         # setting of inverted residual blocks
         self.cfgs = cfgs
@@ -152,7 +149,7 @@ class MobileNetV3(nn.Module):
 
         # building first layer
         input_channel = _make_divisible(16 * width_mult, 8)
-        layers = [conv_3x3_bn(3, input_channel, (6, 2))]
+        layers = [conv_bn(3, input_channel, first_filter_shape, first_filter_stride, 1)]
         # building inverted residual blocks
         block = InvertedResidual
         for k, t, c, use_se, use_hs, s in self.cfgs:
@@ -162,17 +159,8 @@ class MobileNetV3(nn.Module):
             input_channel = output_channel
         self.features = nn.Sequential(*layers)
         # building last several layers
-        self.conv = conv_1x1_bn(input_channel, exp_size)
+        self.conv = conv_bn(input_channel, exp_size, 1, 1, 0)
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
-        # output_channel = {'large': 1280, 'small': 1024}
-        # output_channel = _make_divisible(output_channel[mode] * width_mult, 8) if width_mult > 1.0 else output_channel[
-        #     mode]
-        # self.classifier = nn.Sequential(
-        #     nn.Linear(exp_size, output_channel),
-        #     h_swish(),
-        #     nn.Dropout(0.2),
-        #     nn.Linear(output_channel, num_classes),
-        # )
 
         self._initialize_weights()
 
@@ -180,8 +168,6 @@ class MobileNetV3(nn.Module):
         x = self.features(x)
         x = self.conv(x)
         x = self.pool(x)
-        # x = x.view(x.size(0), -1)
-        # x = self.classifier(x)
         return x
 
     def _initialize_weights(self):
@@ -206,21 +192,21 @@ def mobilenetv3_large(**kwargs):
     """
     cfgs = [
         # k, t, c, SE, HS, s
-        [3, 1, 16, 0, 0, 1],
-        [3, 4, 24, 0, 0, 2],
-        [3, 3, 24, 0, 0, 1],
-        [5, 3, 40, 1, 0, 2],
-        [5, 3, 40, 1, 0, 1],
-        [5, 3, 40, 1, 0, 1],
-        [3, 6, 80, 0, 1, 2],
-        [3, 2.5, 80, 0, 1, 1],
-        [3, 2.3, 80, 0, 1, 1],
-        [3, 2.3, 80, 0, 1, 1],
-        [3, 6, 112, 1, 1, 1],
-        [3, 6, 112, 1, 1, 1],
-        [5, 6, 160, 1, 1, 2],
-        [5, 6, 160, 1, 1, 1],
-        [5, 6, 160, 1, 1, 1]
+        [3,   1,  16, 0, 0, 1],
+        [3,   4,  24, 0, 0, 2],
+        [3,   3,  24, 0, 0, 1],
+        [5,   3,  40, 1, 0, 2],
+        [5,   3,  40, 1, 0, 1],
+        [5,   3,  40, 1, 0, 1],
+        [3,   6,  80, 0, 1, 2],
+        [3, 2.5,  80, 0, 1, 1],
+        [3, 2.3,  80, 0, 1, 1],
+        [3, 2.3,  80, 0, 1, 1],
+        [3,   6, 112, 1, 1, 1],
+        [3,   6, 112, 1, 1, 1],
+        [5,   6, 160, 1, 1, 2],
+        [5,   6, 160, 1, 1, 1],
+        [5,   6, 160, 1, 1, 1]
     ]
     return MobileNetV3(cfgs, mode='large', **kwargs)
 
@@ -231,17 +217,17 @@ def mobilenetv3_small(**kwargs):
     """
     cfgs = [
         # k, t, c, SE, HS, s
-        [7, 1, 16, 1, 0, 2],
-        [5, 4.5, 24, 0, 0, 2],
-        [5, 3.67, 24, 0, 0, 2],
-        [5, 4, 40, 1, 1, 2],
-        [5, 6, 40, 1, 1, 1],
-        [5, 6, 40, 1, 1, 1],
-        [5, 3, 48, 1, 1, 1],
-        [5, 3, 48, 1, 1, 1],
-        [5, 6, 96, 1, 1, 2],
-        [5, 6, 96, 1, 1, 1],
-        [5, 6, 96, 1, 1, 1],
+        [3,    1,  16, 1, 0, 2],
+        [3,  4.5,  24, 0, 0, 2],
+        [3, 3.67,  24, 0, 0, 1],
+        [5,    4,  40, 1, 1, 2],
+        [5,    6,  40, 1, 1, 1],
+        [5,    6,  40, 1, 1, 1],
+        [5,    3,  48, 1, 1, 1],
+        [5,    3,  48, 1, 1, 1],
+        [5,    6,  96, 1, 1, 2],
+        [5,    6,  96, 1, 1, 1],
+        [5,    6,  96, 1, 1, 1],
     ]
 
     return MobileNetV3(cfgs, mode='small', **kwargs)

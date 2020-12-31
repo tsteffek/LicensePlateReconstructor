@@ -38,6 +38,8 @@ if __name__ == '__main__':
 
     start = process_time()
     for dataset, num in zip(datasets, nums):
+        if num == 0:
+            continue
         dataset_path = create_path(root, dataset)
         logging_step = num * args.logging
         log.info(f'Writing {num} {dataset} images to path {dataset_path}...')

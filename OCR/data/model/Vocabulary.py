@@ -36,6 +36,9 @@ class Vocabulary:
             self.chars.extend(chars)
             self.offsets.append(self.offsets[idx] + len(chars))
 
+    def __len__(self):
+        return len(self.chars)
+
     def encode_char(self, char: Character):
         if char.to_string() in self.noise:
             return self.noise_idx

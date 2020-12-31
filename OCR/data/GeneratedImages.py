@@ -40,10 +40,12 @@ def to_torch_format(img: Image) -> Tensor:
 
 
 class GeneratedImagesDataModule(pl.LightningDataModule):
-    def __init__(self, path: str, batch_size, multi_core: bool = True, cuda: bool = torch.cuda.is_available(),
-                 shuffle: bool = True, language_file: str = 'languages.json', noise_file: str = 'noise.json', ):
+    def __init__(self, path: str, batch_size: int, multi_core: bool = True, cuda: bool = torch.cuda.is_available(),
+                 shuffle: bool = True, language_file: str = 'languages.json', noise_file: str = 'noise.json',
+                 image_file_glob: str = '**/*.jpg', **kwargs):
         super().__init__()
         self.path = path
+        self.image_file_glob = image_file_glob
         self.language_file = language_file
         self.noise_file = noise_file
         self.batch_size = batch_size
@@ -64,11 +66,17 @@ class GeneratedImagesDataModule(pl.LightningDataModule):
 
     def setup(self, stage: Optional[str] = None):
         if stage == 'fit' or stage is None:
-            self.train_dataset = GeneratedImages(self.path, self.vocab, image_files='train/**/*.jpg')
-            self.val_dataset = GeneratedImages(self.path, self.vocab, image_files='val/**/*.jpg')
+            self.train_dataset = GeneratedImages(
+                self.path, self.vocab, image_files=os.path.join('train', self.image_file_glob)
+            )
+            self.val_dataset = GeneratedImages(
+                self.path, self.vocab, image_files=os.path.join('val', self.image_file_glob)
+            )
             self.size = self.train_dataset.size
         if stage == 'test' or stage is None:
-            self.test_dataset = GeneratedImages(self.path, self.vocab, image_files='test/**/*.jpg')
+            self.test_dataset = GeneratedImages(
+                self.path, self.vocab, image_files=os.path.join('test', self.image_file_glob)
+            )
             self.size = self.test_dataset.size
 
     @staticmethod
@@ -97,7 +105,6 @@ class GeneratedImagesDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             pin_memory=self.cuda and self.multi_core,
-            shuffle=self.shuffle,
             collate_fn=self.collate_fn
         )
 
@@ -107,6 +114,5 @@ class GeneratedImagesDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             pin_memory=self.cuda and self.multi_core,
-            shuffle=self.shuffle,
             collate_fn=self.collate_fn
         )

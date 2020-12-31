@@ -1,5 +1,6 @@
 import logging
-from typing import Tuple, List, Iterable
+from argparse import ArgumentParser
+from typing import Tuple, List, Iterable, Union
 
 import pytorch_lightning as pl
 import torch
@@ -10,27 +11,38 @@ from OCR.architecture.util import Img2Seq, ConfusionMatrix
 from OCR.data.model.Vocabulary import Vocabulary
 from OCR.image_gen.model.Text import Text
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("lightning").getChild(__name__)
 
 
 class CharacterRecognizer(pl.LightningModule):
     def __init__(
-            self, vocab: Vocabulary, img_size: Tuple[int, int], mobile_net_variant: str = 'small',
-            lstm_hidden: int = 48, num_classes: int = 60, lr: float = 1e-4
+            self, vocab: Vocabulary, img_size: Tuple[int, int],
+            mobile_net_variant: str = 'small', width_mult: float = 1.,
+            first_filter_shape: Union[Tuple[int, int], int] = 3, first_filter_stride: Union[Tuple[int, int], int] = 2,
+            lstm_hidden: int = 48, lr: float = 1e-4, **kwargs
     ):
         super().__init__()
+        self.save_hyperparameters()
+
         self.vocab = vocab
         self.input_size = img_size
-        if mobile_net_variant == 'small':
-            self.cnns = mobilenetv3_small()
-        elif mobile_net_variant == 'large':
-            self.cnns = mobilenetv3_large()
 
-        _, lstm_input_dim, h, w = self.cnns(self.example_input_array).shape
+        mobile_net_kwargs = {
+            'width_mult': width_mult,
+            'first_filter_shape': first_filter_shape,
+            'first_filter_stride': first_filter_stride
+        }
+        if mobile_net_variant == 'small':
+            self.cnns = mobilenetv3_small(**mobile_net_kwargs)
+        elif mobile_net_variant == 'large':
+            self.cnns = mobilenetv3_large(**mobile_net_kwargs)
 
         self.img2seq = Img2Seq()
+
+        w, _, lstm_input_dim = self.img2seq(self.cnns(self.example_input_array)).shape
+
         self.lstms = nn.LSTM(input_size=lstm_input_dim, hidden_size=48, bidirectional=True, num_layers=2, dropout=0.5)
-        self.fc = nn.Linear(lstm_hidden * 2, num_classes)
+        self.fc = nn.Linear(lstm_hidden * 2, len(self.vocab))
         self.output_size = torch.tensor(w, dtype=torch.int64, device=self.device)
 
         self.loss_func = nn.CTCLoss()
@@ -40,6 +52,17 @@ class CharacterRecognizer(pl.LightningModule):
         self.test_accuracy_len = None
         self.test_accuracy = None
         self.test_confusion_matrix = None
+
+    @staticmethod
+    def add_model_specific_args(parent_parser):
+        parser = ArgumentParser(parents=[parent_parser], add_help=False)
+        parser.add_argument('--mobile_net_variant', type=str, default='small')
+        parser.add_argument('--width_mult', type=float, default=1.)
+        parser.add_argument('--first_filter_shape', type=int, nargs='+', default=3)
+        parser.add_argument('--first_filter_stride', type=int, nargs='+', default=2)
+        parser.add_argument('--lstm_hidden', type=int, nargs='+', default=48)
+        parser.add_argument('--lr', type=float, default=1e-4)
+        return parser
 
     @property
     def example_input_array(self, batch_size: int = 4) -> Tensor:
@@ -62,11 +85,20 @@ class CharacterRecognizer(pl.LightningModule):
         logits = nn.functional.log_softmax(output, dim=-1)
         return logits, self.loss_func(logits, targets, input_lengths, target_lengths)
 
-    def training_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int) -> Tensor:
+    def step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]]) -> Tuple[Tensor, Tensor]:
         x, (_, y, y_lengths) = batch
         x_hat = self.forward(x)
-        _, loss = self.loss(x_hat, y, self.output_size.repeat(x_hat.shape[1]), y_lengths)
+        batch_size = x_hat.shape[1]
+        return self.loss(x_hat, y, self.output_size.repeat(batch_size), y_lengths)
+
+    def training_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int) -> Tensor:
+        loss = self.step(batch)[1]
         self.log('train_loss', loss)
+        return loss
+
+    def validation_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int) -> Tensor:
+        loss = self.step(batch)[1]
+        self.log('val_loss', loss, on_epoch=True)
         return loss
 
     def on_test_epoch_start(self):
@@ -75,10 +107,8 @@ class CharacterRecognizer(pl.LightningModule):
         self.test_confusion_matrix = ConfusionMatrix(len(self.vocab.noisy_chars))
 
     def test_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int):
-        x, (texts, y, y_lengths) = batch
-        x_hat = self.forward(x)
-        batch_size = x_hat.shape[1]
-        logits, loss = self.loss(x_hat, y, self.output_size.repeat(batch_size), y_lengths)
+        _, (_, y, y_lengths) = batch
+        logits, loss = self.step(batch)
         self.log('test_loss', loss, on_epoch=True)
 
         predictions, pred_lengths = self._decode_raw(logits.transpose(0, 1))

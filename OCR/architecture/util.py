@@ -7,7 +7,7 @@ from torch import nn
 
 from OCR.data.model.Vocabulary import Vocabulary
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("lightning").getChild(__name__)
 
 
 class Img2Seq(nn.Module):
@@ -17,8 +17,7 @@ class Img2Seq(nn.Module):
     @staticmethod
     def forward(x: Tensor):
         B, C, H, W = x.shape
-        assert H == 1, '{} should have height 1'.format(x.shape)
-        x = x.squeeze(2)
+        x = x.reshape(B, -1, W)
         x = x.permute(2, 0, 1)  # width/time step, batch, channel
         return x
 
@@ -38,9 +37,10 @@ class ConfusionMatrix:
 
     def print(self, vocab: Vocabulary):
         chars = vocab.noisy_chars
-        log.info('\n \t' + '\t'.join(chars))
+        str_matrix = 'Confusion Matrix:\n \t' + '\t'.join(chars)
         for idx, char in enumerate(chars):
-            log.info(f'{char}\t' + '\t'.join(tensor_to_list(self.mat[idx])))
+            str_matrix = str_matrix + f'\n{char}\t' + '\t'.join(tensor_to_list(self.mat[idx]))
+        log.info(str_matrix)
 
 
 def tensor_to_list(t: Tensor) -> Iterable[str]:
