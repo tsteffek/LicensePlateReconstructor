@@ -36,7 +36,7 @@ class GeneratedImages(Dataset):
 
 
 def to_torch_format(img: Image) -> Tensor:
-    return torch.tensor(img, dtype=torch.float32).reshape(*img.size, -1).T / 255
+    return torch.tensor(img.getdata(), dtype=torch.float32).reshape(*img.size, -1).T / 255
 
 
 class GeneratedImagesDataModule(pl.LightningDataModule):
@@ -53,7 +53,7 @@ class GeneratedImagesDataModule(pl.LightningDataModule):
         self.shuffle = shuffle
         self.multi_core = multi_core
         if multi_core:
-            self.num_workers = max(os.cpu_count(), batch_size)
+            self.num_workers = min(os.cpu_count(), batch_size)
         else:
             self.num_workers = 0
 

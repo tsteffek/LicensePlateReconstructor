@@ -4,6 +4,7 @@ from typing import Tuple, List, Iterable, Union
 
 import pytorch_lightning as pl
 import torch
+from guppy import hpy
 from torch import nn, Tensor, optim
 
 from OCR.architecture.mobilenetv3 import mobilenetv3_small, mobilenetv3_large
@@ -12,6 +13,10 @@ from OCR.data.model.Vocabulary import Vocabulary
 from OCR.image_gen.model.Text import Text
 
 log = logging.getLogger("lightning").getChild(__name__)
+
+
+def profile():
+    log.info('\n%s', hpy().heap())
 
 
 class CharacterRecognizer(pl.LightningModule):
@@ -86,6 +91,7 @@ class CharacterRecognizer(pl.LightningModule):
         return logits, self.loss_func(logits, targets, input_lengths, target_lengths)
 
     def step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]]) -> Tuple[Tensor, Tensor]:
+        # profile()
         x, (_, y, y_lengths) = batch
         x_hat = self.forward(x)
         batch_size = x_hat.shape[1]

@@ -68,5 +68,4 @@ def read_chars(data_path: str, language: str):
 
 
 def load_image(image_path: str) -> Image:
-    img = Image.open(image_path)
-    return img.getdata()
+    return Image.open(image_path)
