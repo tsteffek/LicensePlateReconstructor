@@ -14,8 +14,8 @@ if __name__ == '__main__':
     parser.add_argument('--no_train', default=False, action='store_true')
     parser.add_argument('--no_test', default=False, action='store_true')
     parser = CharacterRecognizer.add_model_specific_args(parser)
-    parser = GeneratedImagesDataModule.add_argparse_args(parser)
     parser = Trainer.add_argparse_args(parser)
+    parser = GeneratedImagesDataModule.add_argparse_args(parser)
 
     args = parser.parse_args()
 

@@ -118,6 +118,7 @@ class CharacterRecognizer(pl.LightningModule):
         self.log('test_loss', loss, on_epoch=True)
 
         predictions, pred_lengths = self._decode_raw(logits.transpose(0, 1))
+        log.warning('pred_lengths: %s | y_lengths: %s | self: %s', pred_lengths.device, y_lengths.device, self.device)
         self.test_accuracy_len.update(pred_lengths, y_lengths)
         matching_pred, matching_targets = self._get_matching_length_elements(predictions, pred_lengths, y, y_lengths)
         self.test_accuracy.update(matching_pred, matching_targets)
@@ -127,7 +128,7 @@ class CharacterRecognizer(pl.LightningModule):
         arg_max_batch = logits.argmax(dim=-1)
         uniques = [torch.unique_consecutive(arg_max) for arg_max in arg_max_batch]
         unique_non_blank = [unique[unique != self.vocab.blank_idx] for unique in uniques]
-        pred_lengths = torch.tensor([len(pred) for pred in unique_non_blank], dtype=torch.int64)
+        pred_lengths = torch.tensor([len(pred) for pred in unique_non_blank], dtype=torch.int64, device=self.device)
         return torch.cat(unique_non_blank), pred_lengths
 
     @staticmethod

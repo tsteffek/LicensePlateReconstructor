@@ -14,11 +14,12 @@ from OCR.image_gen.model.Text import Text, TextImage
 
 
 class GeneratedImages(Dataset):
-    def __init__(self, path: str, vocab: Vocabulary, image_files: str = '**/*.jpg'):
+    def __init__(self, path: str, vocab: Vocabulary, image_files: str = '**/*.jpg', precision: int = 32):
         super().__init__()
         self.vocab = vocab
         self.path = path
         self.image_files = image_files
+        self.dtype = torch.float16 if precision == 16 else torch.float32
 
         self.images = IO.get_image_paths(path, image_files)
 
@@ -29,20 +30,20 @@ class GeneratedImages(Dataset):
         image_path = self.images[item]
         ti = TextImage.load(image_path, self.vocab.languages)
         labels = self.vocab.encode_text(ti.text)
-        return to_torch_format(ti.img), (ti.text, torch.tensor(labels, dtype=torch.int64))
+        return to_torch_format(ti.img, self.dtype), (ti.text, torch.tensor(labels, dtype=torch.int64))
 
     def __len__(self):
         return len(self.images)
 
 
-def to_torch_format(img: Image) -> Tensor:
-    return torch.tensor(img.getdata(), dtype=torch.float32).reshape(*img.size, -1).T / 255
+def to_torch_format(img: Image, dtype: torch.dtype) -> Tensor:
+    return torch.tensor(img.getdata(), dtype=dtype).reshape(*img.size, -1).T / 255
 
 
 class GeneratedImagesDataModule(pl.LightningDataModule):
     def __init__(self, path: str, batch_size: int, multi_core: bool = True, cuda: bool = torch.cuda.is_available(),
                  shuffle: bool = True, language_file: str = 'languages.json', noise_file: str = 'noise.json',
-                 image_file_glob: str = '**/*.jpg', **kwargs):
+                 image_file_glob: str = '**/*.jpg', precision: int = 32, **kwargs):
         super().__init__()
         self.path = path
         self.image_file_glob = image_file_glob
@@ -50,6 +51,7 @@ class GeneratedImagesDataModule(pl.LightningDataModule):
         self.noise_file = noise_file
         self.batch_size = batch_size
         self.cuda = cuda
+        self.precision = precision
         self.shuffle = shuffle
         self.multi_core = multi_core
         if multi_core:
@@ -67,15 +69,15 @@ class GeneratedImagesDataModule(pl.LightningDataModule):
     def setup(self, stage: Optional[str] = None):
         if stage == 'fit' or stage is None:
             self.train_dataset = GeneratedImages(
-                self.path, self.vocab, image_files=os.path.join('train', self.image_file_glob)
+                self.path, self.vocab, image_files=os.path.join('train', self.image_file_glob), precision=self.precision
             )
             self.val_dataset = GeneratedImages(
-                self.path, self.vocab, image_files=os.path.join('val', self.image_file_glob)
+                self.path, self.vocab, image_files=os.path.join('val', self.image_file_glob), precision=self.precision
             )
             self.size = self.train_dataset.size
         if stage == 'test' or stage is None:
             self.test_dataset = GeneratedImages(
-                self.path, self.vocab, image_files=os.path.join('test', self.image_file_glob)
+                self.path, self.vocab, image_files=os.path.join('test', self.image_file_glob), precision=self.precision
             )
             self.size = self.test_dataset.size
 
