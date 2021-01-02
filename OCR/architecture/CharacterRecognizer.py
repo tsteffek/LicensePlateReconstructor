@@ -21,10 +21,10 @@ def profile():
 
 class CharacterRecognizer(pl.LightningModule):
     def __init__(
-            self, vocab: Vocabulary, img_size: Tuple[int, int],
+            self, vocab: Vocabulary, img_size: Tuple[int, int], max_iterations: int,
             mobile_net_variant: str = 'small', width_mult: float = 1.,
             first_filter_shape: Union[Tuple[int, int], int] = 3, first_filter_stride: Union[Tuple[int, int], int] = 2,
-            lstm_hidden: int = 48, lr: float = 1e-4, **kwargs
+            lstm_hidden: int = 48, lr: float = 1e-4, lr_schedule: str = None, ctc_reduction: str = 'mean', **kwargs
     ):
         super().__init__()
         self.save_hyperparameters()
@@ -50,14 +50,16 @@ class CharacterRecognizer(pl.LightningModule):
         self.fc = nn.Linear(lstm_hidden * 2, len(self.vocab))
         self.output_size = torch.tensor(w, dtype=torch.int64, device=self.device)
 
-        self.loss_func = nn.CTCLoss()
+        self.loss_func = nn.CTCLoss(reduction=ctc_reduction)
 
         self.lr = lr
+        self.max_steps = max_iterations
+        self.lr_schedule = lr_schedule
 
-        self.test_accuracy = pl.metrics.Accuracy(compute_on_step=False)
-        self.test_accuracy_len = pl.metrics.Accuracy(compute_on_step=False)
-        self.test_confusion_matrix = ConfusionMatrix(self.vocab.noisy_chars)
-        self.test_confusion_matrix_len = ConfusionMatrix(list(map(str, range(15))))
+        self.accuracy = pl.metrics.Accuracy(compute_on_step=False)
+        self.accuracy_len = pl.metrics.Accuracy(compute_on_step=False)
+        self.confusion_matrix = ConfusionMatrix(self.vocab.noisy_chars)
+        self.confusion_matrix_len = ConfusionMatrix(list(map(str, range(15))))
 
     @staticmethod
     def add_model_specific_args(parent_parser):
@@ -68,6 +70,9 @@ class CharacterRecognizer(pl.LightningModule):
         parser.add_argument('--first_filter_stride', type=int, nargs='+', default=2)
         parser.add_argument('--lstm_hidden', type=int, nargs='+', default=48)
         parser.add_argument('--lr', type=float, default=1e-4)
+        parser.add_argument('--lr_schedule', type=str, default=None, choices=['cosine', None])
+        parser.add_argument('--ctc_reduction', type=str, default='mean', choices=['mean', 'sum', None])
+
         return parser
 
     @property
@@ -104,21 +109,30 @@ class CharacterRecognizer(pl.LightningModule):
         return loss
 
     def validation_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int) -> Tensor:
-        loss = self.step(batch)[1]
+        logits, loss = self.step(batch)
         self.log('val_loss', loss, on_epoch=True)
+
+        self.detailed_log(logits, batch)
         return loss
 
     def test_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int):
-        _, (_, y, y_lengths) = batch
         logits, loss = self.step(batch)
         self.log('test_loss', loss, on_epoch=True)
 
+        self.detailed_log(logits, batch)
+
+    def detailed_log(self, logits: Tensor, batch: Tuple[Tensor, Tuple[Tensor, Tensor]]):
+        _, (_, y, y_lengths) = batch
+
         predictions, pred_lengths = self._decode_raw(logits.transpose(0, 1))
-        self.test_accuracy_len.update(pred_lengths, y_lengths)
-        self.test_confusion_matrix_len.update(pred_lengths, y_lengths)
+
+        self.accuracy_len.update(pred_lengths, y_lengths)
+        self.confusion_matrix_len.update(pred_lengths, y_lengths)
+
         matching_pred, matching_targets = self._get_matching_length_elements(predictions, pred_lengths, y, y_lengths)
-        self.test_accuracy.update(matching_pred, matching_targets)
-        self.test_confusion_matrix.update(matching_pred, matching_targets)
+
+        self.accuracy.update(matching_pred, matching_targets)
+        self.confusion_matrix.update(matching_pred, matching_targets)
 
     def _decode_raw(self, logits: Tensor) -> Tuple[Tensor, Tensor]:
         arg_max_batch = logits.argmax(dim=-1)
@@ -132,12 +146,25 @@ class CharacterRecognizer(pl.LightningModule):
         mask: Tensor = pred_lengths.__eq__(target_lengths)
         return pred[mask.repeat_interleave(pred_lengths)], target[mask.repeat_interleave(target_lengths)],
 
+    def log_epoch(self, stage: str):
+        self.log(f'{stage}_acc_len_epoch', self.accuracy_len)
+        self.log(f'{stage}_acc_epoch', self.accuracy)
+        log.info(self.confusion_matrix_len.compute())
+        log.info(self.confusion_matrix.compute())
+
+    def validation_epoch_end(self, outputs: List[Tuple[Iterable[Text], Iterable[Iterable[str]]]]) -> None:
+        self.log_epoch('val')
+
     def test_epoch_end(self, outputs: List[Tuple[Iterable[Text], Iterable[Iterable[str]]]]) -> None:
-        self.log('test_acc_len_epoch', self.test_accuracy_len)
-        self.log('test_acc_epoch', self.test_accuracy)
+        self.log_epoch('test')
 
     def configure_optimizers(self):
-        return optim.Adam(self.parameters(), lr=self.lr)
+        if self.lr_schedule is None:
+            return optim.Adam(self.parameters(), lr=self.lr)
+        elif self.lr_schedule == 'cosine':
+            optimizer = optim.Adam(self.parameters(), lr=self.lr)
+            lr_schedule = optim.lr_scheduler.CosineAnnealingLR(optimizer, self.max_steps, eta_min=0.1)
+            return [optimizer], [lr_schedule]
 
     def on_epoch_end(self):
         log.info('\n')

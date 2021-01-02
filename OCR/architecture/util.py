@@ -50,6 +50,8 @@ class ConfusionMatrix(Metric):
             str_matrix += f'\n{char}\t' + '\t'.join(tensor_to_list(row)) + \
                           f'\t{tensor_to_string(acc)}\t{tensor_to_string(total)}'
 
+        str_matrix += ' \t' + '\t'.join(tensor_to_list(self.matrix.sum(dim=0)))
+
         return str_matrix
 
     def update(self, preds: Tensor, target: Tensor):

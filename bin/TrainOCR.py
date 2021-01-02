@@ -26,15 +26,19 @@ if __name__ == '__main__':
     datamodule = GeneratedImagesDataModule(**dict_args)
     datamodule.setup()
     if args.resume_from_checkpoint:
-        model = CharacterRecognizer.load_from_checkpoint(args.resume_from_checkpoint, vocab=datamodule.vocab,
-                                                         img_size=datamodule.size)
+        model = CharacterRecognizer.load_from_checkpoint(
+            args.resume_from_checkpoint, vocab=datamodule.vocab, img_size=datamodule.size,
+            max_iterations=datamodule.max_steps * args.max_epochs
+        )
     else:
-        model = CharacterRecognizer(vocab=datamodule.vocab, img_size=datamodule.size, **dict_args)
+        model = CharacterRecognizer(
+            vocab=datamodule.vocab, img_size=datamodule.size, max_iterations=datamodule.max_steps * args.max_epochs,
+            **dict_args
+        )
+        log.info(datamodule.max_steps * args.max_epochs)
     trainer = Trainer.from_argparse_args(args, callbacks=[chkpt_config])
     if not args.no_train:
         trainer.tune(model=model, datamodule=datamodule)
         trainer.fit(model=model, datamodule=datamodule)
     if not args.no_test:
         trainer.test(model=model, datamodule=datamodule)
-        log.info(model.test_confusion_matrix_len.compute())
-        log.info(model.test_confusion_matrix.compute())

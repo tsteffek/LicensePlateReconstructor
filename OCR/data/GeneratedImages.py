@@ -1,4 +1,5 @@
 import os
+from math import ceil
 from typing import Optional, List, Tuple, Iterable
 
 import numpy as np
@@ -65,12 +66,14 @@ class GeneratedImagesDataModule(pl.LightningDataModule):
         self.test_dataset = None
         self.val_dataset = None
         self.size = None
+        self.max_steps = None
 
     def setup(self, stage: Optional[str] = None):
         if stage == 'fit' or stage is None:
             self.train_dataset = GeneratedImages(
                 self.path, self.vocab, image_files=os.path.join('train', self.image_file_glob), precision=self.precision
             )
+            self.max_steps = ceil(len(self.train_dataset) / self.batch_size)
             self.val_dataset = GeneratedImages(
                 self.path, self.vocab, image_files=os.path.join('val', self.image_file_glob), precision=self.precision
             )
