@@ -36,3 +36,5 @@ if __name__ == '__main__':
         trainer.fit(model=model, datamodule=datamodule)
     if not args.no_test:
         trainer.test(model=model, datamodule=datamodule)
+        log.info(model.test_confusion_matrix_len.compute())
+        log.info(model.test_confusion_matrix.compute())

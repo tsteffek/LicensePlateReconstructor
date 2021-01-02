@@ -1,11 +1,10 @@
 import logging
-from typing import Iterable
+from typing import Iterable, Any, List
 
 import torch
+from pytorch_lightning.metrics import Metric
 from torch import Tensor
 from torch import nn
-
-from OCR.data.model.Vocabulary import Vocabulary
 
 log = logging.getLogger("lightning").getChild(__name__)
 
@@ -22,26 +21,50 @@ class Img2Seq(nn.Module):
         return x
 
 
-class ConfusionMatrix:
-    def __init__(self, num_classes):
-        self.mat = torch.full((num_classes, num_classes), fill_value=0, dtype=torch.int64)
+class ConfusionMatrix(Metric):
+    matrix: Tensor
 
-    def update(self, predictions: Tensor, targets: Tensor) -> None:
+    def __init__(self, classes: List[Any]):
+        super().__init__()
+        self.classes = classes
+        self.add_state(
+            'matrix', default=torch.full((len(classes), len(classes)), fill_value=0, dtype=torch.int64),
+            dist_reduce_fx=lambda x: torch.sum(x, dim=-1), persistent=True
+        )
+
+    def compute(self) -> str:
+        if torch.max(self.matrix) == 0:
+            return 'Confusion Matrix: nothing registered.'
+
+        total = self.matrix.sum()
+        tp = self.matrix.diagonal().sum()
+        fp = total - tp
+
+        str_matrix = 'Confusion Matrix:\n' \
+                     f'Total: {total} | Correct: {tp} | Wrong: {fp}\n' \
+                     ' \t' + '\t'.join(self.classes) + '\tacc\ttotal'
+
+        for idx, (char, row) in enumerate(zip(self.classes, self.matrix)):
+            total = row.sum()
+            acc = row[idx] / total
+            str_matrix += f'\n{char}\t' + '\t'.join(tensor_to_list(row)) + \
+                          f'\t{tensor_to_string(acc)}\t{tensor_to_string(total)}'
+
+        return str_matrix
+
+    def update(self, preds: Tensor, target: Tensor):
         # # this
         # uniques, count = torch.unique(torch.stack((targets, predictions)), return_counts=True)
         # t, p = uniques.unbind()
         # self.mat[t, p] = self.mat[t, p] + count
         # # or that
-        for t, p in zip(targets, predictions):
-            self.mat[t, p] = self.mat[t, p] + 1
+        for t, p in zip(target, preds):
+            self.matrix[t, p] = self.matrix[t, p] + 1
 
-    def print(self, vocab: Vocabulary):
-        chars = vocab.noisy_chars
-        str_matrix = 'Confusion Matrix:\n \t' + '\t'.join(chars)
-        for idx, char in enumerate(chars):
-            str_matrix = str_matrix + f'\n{char}\t' + '\t'.join(tensor_to_list(self.mat[idx]))
-        log.info(str_matrix)
+
+def tensor_to_string(t: Tensor) -> str:
+    return str(t.item())
 
 
 def tensor_to_list(t: Tensor) -> Iterable[str]:
-    return map(str, map(Tensor.item, list(t)))
+    return map(tensor_to_string, list(t))

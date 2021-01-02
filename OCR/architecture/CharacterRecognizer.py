@@ -54,9 +54,10 @@ class CharacterRecognizer(pl.LightningModule):
 
         self.lr = lr
 
-        self.test_accuracy_len = None
-        self.test_accuracy = None
-        self.test_confusion_matrix = None
+        self.test_accuracy = pl.metrics.Accuracy(compute_on_step=False)
+        self.test_accuracy_len = pl.metrics.Accuracy(compute_on_step=False)
+        self.test_confusion_matrix = ConfusionMatrix(self.vocab.noisy_chars)
+        self.test_confusion_matrix_len = ConfusionMatrix(list(map(str, range(15))))
 
     @staticmethod
     def add_model_specific_args(parent_parser):
@@ -71,12 +72,12 @@ class CharacterRecognizer(pl.LightningModule):
 
     @property
     def example_input_array(self, batch_size: int = 4) -> Tensor:
-        return torch.randn(batch_size, 3, *self.input_size, dtype=torch.float32)
+        return torch.randn(batch_size, 3, *self.input_size, dtype=torch.float32, device=self.device)
 
     @property
     def example_input_and_label(self) -> Tuple[Tensor, Tuple[Tensor, Tensor]]:
         return torch.randn(4, *self.input_size, 3), \
-               (torch.randint(1, 2, (4, 5)), torch.full([4], 5, dtype=torch.int64))
+               (torch.randint(1, 2, (4, 5)), torch.full([4], 5, dtype=torch.int64, device=self.device))
 
     def forward(self, x: Tensor) -> Tensor:
         cnn_output = self.cnns(x)
@@ -107,19 +108,14 @@ class CharacterRecognizer(pl.LightningModule):
         self.log('val_loss', loss, on_epoch=True)
         return loss
 
-    def on_test_epoch_start(self):
-        self.test_accuracy = pl.metrics.Accuracy(compute_on_step=False)
-        self.test_accuracy_len = pl.metrics.Accuracy(compute_on_step=False)
-        self.test_confusion_matrix = ConfusionMatrix(len(self.vocab.noisy_chars))
-
     def test_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int):
         _, (_, y, y_lengths) = batch
         logits, loss = self.step(batch)
         self.log('test_loss', loss, on_epoch=True)
 
         predictions, pred_lengths = self._decode_raw(logits.transpose(0, 1))
-        log.warning('pred_lengths: %s | y_lengths: %s | self: %s', pred_lengths.device, y_lengths.device, self.device)
         self.test_accuracy_len.update(pred_lengths, y_lengths)
+        self.test_confusion_matrix_len.update(pred_lengths, y_lengths)
         matching_pred, matching_targets = self._get_matching_length_elements(predictions, pred_lengths, y, y_lengths)
         self.test_accuracy.update(matching_pred, matching_targets)
         self.test_confusion_matrix.update(matching_pred, matching_targets)
@@ -137,9 +133,8 @@ class CharacterRecognizer(pl.LightningModule):
         return pred[mask.repeat_interleave(pred_lengths)], target[mask.repeat_interleave(target_lengths)],
 
     def test_epoch_end(self, outputs: List[Tuple[Iterable[Text], Iterable[Iterable[str]]]]) -> None:
-        self.log('test_acc_len_epoch', self.test_accuracy_len.compute(), on_epoch=True)
-        self.log('test_acc_epoch', self.test_accuracy.compute(), on_epoch=True)
-        self.test_confusion_matrix.print(self.vocab)
+        self.log('test_acc_len_epoch', self.test_accuracy_len)
+        self.log('test_acc_epoch', self.test_accuracy)
 
     def configure_optimizers(self):
         return optim.Adam(self.parameters(), lr=self.lr)
