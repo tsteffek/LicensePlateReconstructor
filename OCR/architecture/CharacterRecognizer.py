@@ -127,7 +127,7 @@ class CharacterRecognizer(pl.LightningModule):
         arg_max_batch = logits.argmax(dim=-1)
         uniques = [torch.unique_consecutive(arg_max) for arg_max in arg_max_batch]
         unique_non_blank = [unique[unique != self.vocab.blank_idx] for unique in uniques]
-        pred_lengths = torch.tensor([len(pred) for pred in unique_non_blank], dtype=torch.int64, device=self.device)
+        pred_lengths = torch.tensor([len(pred) for pred in unique_non_blank], dtype=torch.int64)
         return torch.cat(unique_non_blank), pred_lengths
 
     @staticmethod
