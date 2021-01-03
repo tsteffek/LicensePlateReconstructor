@@ -60,7 +60,7 @@ class GeneratedImagesDataModule(pl.LightningDataModule):
         else:
             self.num_workers = 0
 
-        self.vocab = Vocabulary(IO.load_languages(path, language_file), noise=IO.read_json(noise_file))
+        self.vocab = Vocabulary(path, language_file)
 
         self.train_dataset = None
         self.test_dataset = None

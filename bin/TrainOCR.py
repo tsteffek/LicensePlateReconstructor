@@ -26,6 +26,7 @@ if __name__ == '__main__':
     datamodule = GeneratedImagesDataModule(**dict_args)
     datamodule.setup()
     if args.resume_from_checkpoint:
+        log.warning('Loading checkpoint from %s', args.resume_from_checkpoint)
         model = CharacterRecognizer.load_from_checkpoint(
             args.resume_from_checkpoint, vocab=datamodule.vocab, img_size=datamodule.size,
             max_iterations=datamodule.max_steps * args.max_epochs

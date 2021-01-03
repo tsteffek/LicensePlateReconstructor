@@ -4,7 +4,7 @@ import logging
 import os
 from os import path
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Tuple
 
 from PIL import Image
 
@@ -42,10 +42,10 @@ def read_languages(data_path: str = DATA_PATH):
     return [Language(language, chars[language], fonts[language]) for language in languages]
 
 
-def load_languages(path: str, language_file: str = 'languages.json') -> Dict[int, Language]:
-    with open(os.path.join(path, language_file)) as fh:
-        languages = json.load(fh)
-        return {lang['id']: Language.parse_obj(lang) for lang in languages}
+def load_languages_file(file_path: str, language_file: str = 'languages.json') -> Tuple[List, List, List]:
+    json_obj = read_json(language_file, Path(file_path))
+    json_obj['languages'] = [Language.parse_obj(lang) for lang in json_obj['languages']]
+    return json_obj['vocab'], json_obj['languages'], json_obj['noise']
 
 
 def find_language_names(data_path: str):

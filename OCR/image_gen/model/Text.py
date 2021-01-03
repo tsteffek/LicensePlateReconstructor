@@ -109,7 +109,10 @@ class TextImage:
     @classmethod
     def load(cls, path: str, languages: Dict[int, Language]):
         file_name = IO.file_name(path)
-        img_type, text_str = file_name.split('_', 1)
+        if file_name.startswith('#'):
+            _, img_type, text_str = file_name.split('_', 2)
+        else:
+            img_type, text_str = file_name.split('_', 1)
 
         img = IO.load_image(path)
         text = Text.from_string(text_str, languages)

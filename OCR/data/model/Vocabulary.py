@@ -1,48 +1,38 @@
-from typing import Dict, Iterable, List
+from typing import Iterable, List
 
-from OCR.image_gen.model.Language import Language
+from OCR import IO
 from OCR.image_gen.model.Text import Character, Text
 
 
 class Vocabulary:
-    def __init__(self, languages: Dict[int, Language], special_tokens: Iterable[str] = None,
-                 noise: Iterable[str] = None):
+    def __init__(self, path: str, language_file: str, special_tokens: Iterable[str] = None):
         if special_tokens is None:
             special_tokens = ['_', '°']
-        if noise is None:
-            noise = []
-
-        self.languages = languages
         self.special_tokens = special_tokens
+
+        noisy_chars, self.languages, noise = IO.load_languages_file(path, language_file)
+        self.noisy_chars = special_tokens + noisy_chars
+        self.noise = set(noise)
+        self.chars = [char for char in self.noisy_chars if char not in self.noise]
 
         self.blank_idx = 0
         self.noise_idx = 1
 
-        self.noise = set(noise)
-
-        self.chars = [*special_tokens]
-        self.noisy_chars = [*special_tokens]
-        self.offsets = [len(special_tokens)]
-        for idx in range(len(languages)):
-            lang = languages[idx]
-            assert idx == lang.id
-
-            chars = lang.chars
-            self.noisy_chars.extend(chars)
-
-            if self.noise is not None:
-                chars = [char for char in lang.chars if char not in self.noise]
-
-            self.chars.extend(chars)
-            self.offsets.append(self.offsets[idx] + len(chars))
+        self.str_lookup = {char: idx for idx, char in enumerate(self.chars)}
 
     def __len__(self):
         return len(self.chars)
 
-    def encode_char(self, char: Character):
-        if char.to_string() in self.noise:
+    def encode_str(self, string: str) -> int:
+        if string in self.noise:
             return self.noise_idx
-        return self.offsets[char.language.id] + char.char_idx
+        return self.str_lookup[string]
+
+    def encode_strings(self, strings: List[str]) -> List[int]:
+        return [self.encode_str(s) for s in strings]
+
+    def encode_char(self, char: Character):
+        return self.encode_str(str(char))
 
     def encode_text(self, text: Text):
         return [self.encode_char(char) for char in text.chars]

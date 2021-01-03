@@ -34,15 +34,15 @@ class ConfusionMatrix(Metric):
 
     def compute(self) -> str:
         if torch.max(self.matrix) == 0:
-            return 'Confusion Matrix: nothing registered.'
+            return '\nConfusion Matrix: nothing registered.'
 
         total = self.matrix.sum()
         tp = self.matrix.diagonal().sum()
         fp = total - tp
 
-        str_matrix = 'Confusion Matrix:\n' \
-                     f'Total: {total} | Correct: {tp} | Wrong: {fp}\n' \
-                     ' \t' + '\t'.join(self.classes) + '\tacc\ttotal'
+        str_matrix = '\nConfusion Matrix:\n' \
+                     f'Total: {total} | Correct: {tp} | Wrong: {fp}' \
+                     '\n \t' + '\t'.join(self.classes) + '\tacc\ttotal'
 
         for idx, (char, row) in enumerate(zip(self.classes, self.matrix)):
             total = row.sum()
@@ -50,7 +50,7 @@ class ConfusionMatrix(Metric):
             str_matrix += f'\n{char}\t' + '\t'.join(tensor_to_list(row)) + \
                           f'\t{tensor_to_string(acc)}\t{tensor_to_string(total)}'
 
-        str_matrix += ' \t' + '\t'.join(tensor_to_list(self.matrix.sum(dim=0)))
+        str_matrix += '\n \t' + '\t'.join(tensor_to_list(self.matrix.sum(dim=0)))
 
         return str_matrix
 

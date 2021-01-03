@@ -24,6 +24,7 @@ class Language:
 
     def __post_init__(self):
         self.id = next(ID_GEN)
+        self.str_lookup = {char: idx for idx, char in enumerate(self.chars)}
 
     def __len__(self):
         return len(self.chars)
@@ -36,6 +37,9 @@ class Language:
 
     def __hash__(self):
         return hash(self.name)
+
+    def __contains__(self, item):
+        return item in self.str_lookup
 
     @classmethod
     def parse_obj(cls, obj):
