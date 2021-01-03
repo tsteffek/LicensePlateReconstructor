@@ -1,23 +1,7 @@
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: ocr-images-pvc-ranged-train
-spec:
-  dataSource:
-    name: ocr-images-pvc-ranged
-    kind: PersistentVolumeClaim
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 25Gi
-
----
-
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: ocr-train-16
+  name: ocr-test
 spec:
   template:
     metadata:
@@ -27,15 +11,14 @@ spec:
       restartPolicy: Never
       containers:
         - name: lpr
-          image: registry.datexis.com/tsteffek/licenseplatereconstructor:e16950806ea2f738c66c65d2660d4530f86ffaf2
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:e7df031dbd78c9e62725e3228139599dcfa6a045
           command: [ "python" ]
           args: [ "bin/TrainOCR.py",
                   "--path", "/var/lib/images",
-                  "--max_epochs", "20",
-                  "--default_root_dir", "/var/lib/models/cosine",
-                  "--batch_size", "50",
+                  "--no_train",
+                  "--batch_size", "40",
                   "--gpus", "-1",
-                  "--precision", "16"
+                  '--resume_from_checkpoint', "/var/lib/models/default/lightning_logs/version_13/checkpoints/epoch=7-step=190893.ckpt"
           ]
           resources:
             requests:
@@ -54,7 +37,7 @@ spec:
       volumes:
         - name: ocr-images
           persistentVolumeClaim:
-            claimName: ocr-images-pvc-ranged-train
+            claimName: ocr-images-pvc-train
         - name: ocr-models
           persistentVolumeClaim:
             claimName: ocr-models-pvc

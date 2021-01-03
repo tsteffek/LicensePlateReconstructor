@@ -163,7 +163,7 @@ class CharacterRecognizer(pl.LightningModule):
             return optim.Adam(self.parameters(), lr=self.lr)
         elif self.lr_schedule == 'cosine':
             optimizer = optim.Adam(self.parameters(), lr=self.lr)
-            lr_schedule = optim.lr_scheduler.CosineAnnealingLR(optimizer, self.max_steps, eta_min=0.1)
+            lr_schedule = optim.lr_scheduler.CosineAnnealingLR(optimizer, self.max_steps)
             return [optimizer], [lr_schedule]
 
     def on_epoch_end(self):
