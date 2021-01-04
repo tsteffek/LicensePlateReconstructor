@@ -48,7 +48,8 @@ class CharacterRecognizer(pl.LightningModule):
 
         w, _, lstm_input_dim = self.img2seq(self.cnns(self.example_input_array)).shape
 
-        self.lstms = nn.LSTM(input_size=lstm_input_dim, hidden_size=48, bidirectional=True, num_layers=2, dropout=0.5)
+        self.lstms = nn.LSTM(input_size=lstm_input_dim, hidden_size=lstm_hidden,
+                             bidirectional=True, num_layers=2, dropout=0.5)
         self.fc = nn.Linear(lstm_hidden * 2, len(self.vocab))
         self.output_size = torch.tensor(w, dtype=torch.int64, device=self.device)
 

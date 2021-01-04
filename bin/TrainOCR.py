@@ -13,30 +13,40 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--no_train', default=False, action='store_true')
     parser.add_argument('--no_test', default=False, action='store_true')
+    parser.add_argument('--progress_bar_refresh_ratio', type=float)
     parser = CharacterRecognizer.add_model_specific_args(parser)
     parser = Trainer.add_argparse_args(parser)
     parser = GeneratedImagesDataModule.add_argparse_args(parser)
 
     args = parser.parse_args()
 
-    chkpt_config = ModelCheckpoint(monitor='train_loss', save_top_k=10, save_last=True, verbose=True)
-    # chkpt_config = ModelCheckpoint(save_last=True, verbose=True)
-
     dict_args = vars(args)
     datamodule = GeneratedImagesDataModule(**dict_args)
     datamodule.setup()
+
+    max_iterations = datamodule.max_steps * args.max_epochs
+
     if args.resume_from_checkpoint:
         log.warning('Loading checkpoint from %s', args.resume_from_checkpoint)
         model = CharacterRecognizer.load_from_checkpoint(
             args.resume_from_checkpoint, vocab=datamodule.vocab, img_size=datamodule.size,
-            max_iterations=datamodule.max_steps * args.max_epochs
+            max_iterations=max_iterations
         )
     else:
         model = CharacterRecognizer(
-            vocab=datamodule.vocab, img_size=datamodule.size, max_iterations=datamodule.max_steps * args.max_epochs,
+            vocab=datamodule.vocab, img_size=datamodule.size, max_iterations=max_iterations,
             **dict_args
         )
-    trainer = Trainer.from_argparse_args(args, callbacks=[chkpt_config])
+
+    trainer_callbacks = [
+        ModelCheckpoint(monitor='train_loss', save_top_k=10, save_last=True, verbose=True)
+    ]
+    # chkpt_config = ModelCheckpoint(save_last=True, verbose=True)
+
+    if args.progress_bar_refresh_ratio:
+        args.progress_bar_refresh_rate = int(max_iterations * args.progress_bar_refresh_ratio)
+
+    trainer = Trainer.from_argparse_args(args, callbacks=trainer_callbacks)
     if not args.no_train:
         trainer.tune(model=model, datamodule=datamodule)
         trainer.fit(model=model, datamodule=datamodule)

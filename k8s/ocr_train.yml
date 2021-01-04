@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: ocr-images-pvc-ranged-train
+  name: ocr-images-pvc-ranged-train-overfit
 spec:
   dataSource:
     name: ocr-images-pvc-ranged
@@ -17,7 +17,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: ocr-train-ranged-all
+  name: ocr-train-ranged-all-overfit
 spec:
   template:
     metadata:
@@ -27,20 +27,22 @@ spec:
       restartPolicy: Never
       containers:
         - name: lpr
-          image: registry.datexis.com/tsteffek/licenseplatereconstructor:dd9fbf6caf9ca623d8ba644304ea67fec9f43753
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:9c2baa1ad8b137e423a12cacf666ba21b1a03175
           command: [ "python" ]
           args: [ "bin/TrainOCR.py",
                   "--path", "/var/lib/images",
-                  "--width_mult", "0.5",
-                  "--max_epochs", "80",
-                  "--default_root_dir", "/var/lib/models/ranged/all",
+                  "--width_mult", "1",
+                  "--max_epochs", "100",
+                  "--default_root_dir", "/var/lib/models/ranged/overfit",
                   "--batch_size", "512",
                   "--gpus", "-1",
                   "--precision", "16",
                   "--lr", "0.1",
                   "--lr_schedule", "cosine",
-                  "--lr_warm_up",
-                  "--target_size", "0.2"
+                  "--target_size", "0.2",
+                  "--progress_bar_refresh_rate", "5",
+                  "--overfit_batches", "10",
+                  "--lstm_hidden", "256"
           ]
           resources:
             requests:
@@ -59,7 +61,7 @@ spec:
       volumes:
         - name: ocr-images
           persistentVolumeClaim:
-            claimName: ocr-images-pvc-ranged-train
+            claimName: ocr-images-pvc-ranged-train-overfit
         - name: ocr-models
           persistentVolumeClaim:
             claimName: ocr-models-pvc
