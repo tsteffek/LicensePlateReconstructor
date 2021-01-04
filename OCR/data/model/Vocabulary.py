@@ -10,10 +10,10 @@ class Vocabulary:
             special_tokens = ['_', '°']
         self.special_tokens = special_tokens
 
-        noisy_chars, self.languages, noise = IO.load_languages_file(path, language_file)
-        self.noisy_chars = special_tokens + noisy_chars
+        all_chars, self.languages, noise = IO.load_languages_file(path, language_file)
         self.noise = set(noise)
-        self.chars = [char for char in self.noisy_chars if char not in self.noise]
+        self.chars = special_tokens + [char for char in all_chars if char not in self.noise]
+        self.noisy_chars = self.chars + noise
 
         self.blank_idx = 0
         self.noise_idx = 1

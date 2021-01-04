@@ -41,16 +41,19 @@ class ConfusionMatrix(Metric):
         fp = total - tp
 
         str_matrix = '\nConfusion Matrix:\n' \
-                     f'Total: {total} | Correct: {tp} | Wrong: {fp}' \
+                     f'Total: {total} | Correct: {tp} | Wrong: {fp} | Acc: {tp / total}' \
                      '\n \t' + '\t'.join(self.classes) + '\tacc\ttotal'
 
-        for idx, (char, row) in enumerate(zip(self.classes, self.matrix)):
-            total = row.sum()
-            acc = row[idx] / total
+        row_totals = self.matrix.sum(dim=1)
+        row_accs = self.matrix.diagonal() / row_totals
+        for char, row, acc, total in zip(self.classes, self.matrix, row_accs, row_totals):
             str_matrix += f'\n{char}\t' + '\t'.join(tensor_to_list(row)) + \
                           f'\t{tensor_to_string(acc)}\t{tensor_to_string(total)}'
 
-        str_matrix += '\n \t' + '\t'.join(tensor_to_list(self.matrix.sum(dim=0)))
+        col_totals = self.matrix.sum(dim=0)
+        col_accs = self.matrix.diagonal() / col_totals
+        str_matrix += '\n \t' + '\t'.join(tensor_to_list(col_accs))
+        str_matrix += '\n \t' + '\t'.join(tensor_to_list(col_totals))
 
         return str_matrix
 

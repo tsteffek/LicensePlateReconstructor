@@ -60,7 +60,7 @@ class CharacterRecognizer(pl.LightningModule):
         self.lr_schedule = lr_schedule
         self.lr_warm_up = lr_warm_up
 
-        self.accuracy = pl.metrics.Accuracy(compute_on_step=False)
+        self.accuracy_cha = pl.metrics.Accuracy(compute_on_step=False)
         self.accuracy_len = pl.metrics.Accuracy(compute_on_step=False)
         self.confusion_matrix = ConfusionMatrix(self.vocab.noisy_chars)
         self.confusion_matrix_len = ConfusionMatrix(list(map(str, range(w))))
@@ -136,7 +136,7 @@ class CharacterRecognizer(pl.LightningModule):
 
         matching_pred, matching_targets = self._get_matching_length_elements(predictions, pred_lengths, y, y_lengths)
 
-        self.accuracy.update(matching_pred, matching_targets)
+        self.accuracy_cha.update(matching_pred, matching_targets)
         self.confusion_matrix.update(matching_pred, matching_targets)
 
     def _decode_raw(self, logits: Tensor) -> Tuple[Tensor, Tensor]:
@@ -152,8 +152,11 @@ class CharacterRecognizer(pl.LightningModule):
         return pred[mask.repeat_interleave(pred_lengths)], target[mask.repeat_interleave(target_lengths)],
 
     def log_epoch(self, stage: str):
-        self.log(f'{stage}_acc_len_epoch', self.accuracy_len)
-        self.log(f'{stage}_acc_epoch', self.accuracy)
+        acc_len = self.accuracy_len.compute()
+        acc_cha = self.accuracy_cha.compute()
+        self.log(f'{stage}_acc_len_epoch', acc_len)
+        self.log(f'{stage}_acc_cha_epoch', acc_cha)
+        self.log(f'{stage}_accuracy', acc_len * acc_cha)
         log.info(self.confusion_matrix_len.compute())
         log.info(self.confusion_matrix.compute())
 

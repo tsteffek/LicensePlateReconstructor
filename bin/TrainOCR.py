@@ -39,7 +39,7 @@ if __name__ == '__main__':
         )
 
     trainer_callbacks = [
-        ModelCheckpoint(monitor='train_loss', save_top_k=10, save_last=True, verbose=True)
+        ModelCheckpoint(monitor='val_accuracy', save_top_k=10, save_last=True, verbose=True)
     ]
     # chkpt_config = ModelCheckpoint(save_last=True, verbose=True)
 

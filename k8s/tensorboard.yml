@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ocr-tensorboard-service
+  labels:
+    project: ocr
+    app: tensorboard
+    tier: monitoring
+spec:
+  type: NodePort
+  ports:
+    - port: 6006
+      name: ssh-port
+      targetPort: 6006
+  selector:
+    project: ocr
+    app: tensorboard
+    tier: monitoring
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ocr-tensorboard
+  labels:
+    project: ocr
+    app: tensorboard
+    tier: monitoring
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        project: ocr
+        app: tensorboard
+        tier: monitoring
+    spec:
+      containers:
+        - name: tensorboard
+          image: registry.datexis.com/s76413/tensorboard
+          ports:
+            - name: client-port
+              containerPort: 6006
+          command: [ 'tensorboard', '--logdir=/var/lib/models', '--host=0.0.0.0' ]
+          resources:
+            requests:
+              cpu: "0.2"
+              memory: "200Mi"
+            limits:
+              cpu: "0.2"
+              memory: "200Mi"
+          volumeMounts:
+            - name: ocr-models
+              mountPath: /var/lib/models
+      imagePullSecrets:
+        - name: private-registry-auth
+      volumes:
+        - name: ocr-models
+          persistentVolumeClaim:
+            claimName: ocr-models-pvc
+  selector:
+    matchLabels:
+      project: ocr
+      app: tensorboard
+      tier: monitoring

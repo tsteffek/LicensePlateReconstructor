@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: ocr-images-pvc-ranged-train-overfit
+  name: ocr-images-pvc-golden
 spec:
   dataSource:
     name: ocr-images-pvc-ranged
@@ -17,7 +17,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: ocr-train-ranged-all-overfit
+  name: ocr-train-golden
 spec:
   template:
     metadata:
@@ -27,27 +27,24 @@ spec:
       restartPolicy: Never
       containers:
         - name: lpr
-          image: registry.datexis.com/tsteffek/licenseplatereconstructor:9c2baa1ad8b137e423a12cacf666ba21b1a03175
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:c9115d10f93e64685fc06ef2cf236633b4c9e9b5
           command: [ "python" ]
           args: [ "bin/TrainOCR.py",
+                  "--resume_from_checkpoint", "/var/lib/models/best-no-lr/checkpoints/last.ckpt",
                   "--path", "/var/lib/images",
-                  "--width_mult", "1",
-                  "--max_epochs", "100",
-                  "--default_root_dir", "/var/lib/models/ranged/overfit",
+                  "--width_mult", "0.5",
+                  "--max_epochs", "80",
+                  "--default_root_dir", "/var/lib/models/golden",
                   "--batch_size", "512",
                   "--gpus", "-1",
                   "--precision", "16",
-                  "--lr", "0.1",
-                  "--lr_schedule", "cosine",
                   "--target_size", "0.2",
-                  "--progress_bar_refresh_rate", "5",
-                  "--overfit_batches", "10",
-                  "--lstm_hidden", "256"
+                  "--progress_bar_refresh_ratio", "0.1",
           ]
           resources:
             requests:
               nvidia.com/gpu: 1
-              memory: 100Gi
+              memory: 80Gi
             limits:
               nvidia.com/gpu: 1
               memory: 150Gi
@@ -59,12 +56,12 @@ spec:
             - name: dshm
               mountPath: /dev/shm
       volumes:
-        - name: ocr-images
-          persistentVolumeClaim:
-            claimName: ocr-images-pvc-ranged-train-overfit
         - name: ocr-models
           persistentVolumeClaim:
             claimName: ocr-models-pvc
+        - name: ocr-images
+          persistentVolumeClaim:
+            claimName: ocr-images-pvc-golden
         - name: dshm
           emptyDir:
             medium: Memory
