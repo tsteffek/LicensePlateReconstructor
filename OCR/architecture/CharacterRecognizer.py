@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 from typing import Tuple, List, Iterable, Union
 
 import pytorch_lightning as pl
+import pytorch_warmup as warmup
 import torch
 from guppy import hpy
 from torch import nn, Tensor, optim
@@ -24,7 +25,8 @@ class CharacterRecognizer(pl.LightningModule):
             self, vocab: Vocabulary, img_size: Tuple[int, int], max_iterations: int,
             mobile_net_variant: str = 'small', width_mult: float = 1.,
             first_filter_shape: Union[Tuple[int, int], int] = 3, first_filter_stride: Union[Tuple[int, int], int] = 2,
-            lstm_hidden: int = 48, lr: float = 1e-4, lr_schedule: str = None, ctc_reduction: str = 'mean', **kwargs
+            lstm_hidden: int = 48, lr: float = 1e-4, lr_schedule: str = None, lr_warm_up: bool = False,
+            ctc_reduction: str = 'mean', **kwargs
     ):
         super().__init__()
         self.save_hyperparameters()
@@ -55,6 +57,7 @@ class CharacterRecognizer(pl.LightningModule):
         self.lr = lr
         self.max_steps = max_iterations
         self.lr_schedule = lr_schedule
+        self.lr_warm_up = lr_warm_up
 
         self.accuracy = pl.metrics.Accuracy(compute_on_step=False)
         self.accuracy_len = pl.metrics.Accuracy(compute_on_step=False)
@@ -68,9 +71,10 @@ class CharacterRecognizer(pl.LightningModule):
         parser.add_argument('--width_mult', type=float, default=1.)
         parser.add_argument('--first_filter_shape', type=int, nargs='+', default=3)
         parser.add_argument('--first_filter_stride', type=int, nargs='+', default=2)
-        parser.add_argument('--lstm_hidden', type=int, nargs='+', default=48)
+        parser.add_argument('--lstm_hidden', type=int, default=48)
         parser.add_argument('--lr', type=float, default=1e-4)
         parser.add_argument('--lr_schedule', type=str, default=None, choices=['cosine', None])
+        parser.add_argument('--lr_warm_up', default=False, action='store_true')
         parser.add_argument('--ctc_reduction', type=str, default='mean', choices=['mean', 'sum', None])
 
         return parser
@@ -160,11 +164,23 @@ class CharacterRecognizer(pl.LightningModule):
 
     def configure_optimizers(self):
         if self.lr_schedule is None:
-            return optim.Adam(self.parameters(), lr=self.lr)
+            return optim.Adam(self.parameters(), lr=self.lr, weight_decay=1e-5)
         elif self.lr_schedule == 'cosine':
-            optimizer = optim.Adam(self.parameters(), lr=self.lr)
-            lr_schedule = optim.lr_scheduler.CosineAnnealingLR(optimizer, self.max_steps)
-            return [optimizer], [lr_schedule]
+            optimizer = optim.Adam(self.parameters(), lr=self.lr, weight_decay=1e-5)
+
+            schedules = [{
+                'scheduler': optim.lr_scheduler.CosineAnnealingLR(optimizer, self.max_steps),
+                'interval': 'step',
+            }]
+            if self.lr_warm_up:
+                warmup_scheduler = warmup.UntunedExponentialWarmup(optimizer)
+                warmup_scheduler.step = warmup_scheduler.dampen
+                schedules.append({
+                    'scheduler': warmup_scheduler,
+                    'interval': 'step'
+                })
+
+            return [optimizer], schedules
 
     def on_epoch_end(self):
         log.info('\n')

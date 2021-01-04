@@ -36,7 +36,6 @@ if __name__ == '__main__':
             vocab=datamodule.vocab, img_size=datamodule.size, max_iterations=datamodule.max_steps * args.max_epochs,
             **dict_args
         )
-        log.info(datamodule.max_steps * args.max_epochs)
     trainer = Trainer.from_argparse_args(args, callbacks=[chkpt_config])
     if not args.no_train:
         trainer.tune(model=model, datamodule=datamodule)
