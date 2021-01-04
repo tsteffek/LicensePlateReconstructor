@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: ocr-images-pvc-golden
+  name: ocr-images-pvc-golden-lr
 spec:
   dataSource:
     name: ocr-images-pvc-ranged
@@ -17,7 +17,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: ocr-train-golden
+  name: ocr-train-golden-lr
 spec:
   template:
     metadata:
@@ -27,17 +27,19 @@ spec:
       restartPolicy: Never
       containers:
         - name: lpr
-          image: registry.datexis.com/tsteffek/licenseplatereconstructor:c9115d10f93e64685fc06ef2cf236633b4c9e9b5
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:bd707331e534fc934b70cb241ee7d9c2ed7c81bd
           command: [ "python" ]
           args: [ "bin/TrainOCR.py",
                   "--resume_from_checkpoint", "/var/lib/models/best-no-lr/checkpoints/last.ckpt",
                   "--path", "/var/lib/images",
                   "--width_mult", "0.5",
-                  "--max_epochs", "80",
-                  "--default_root_dir", "/var/lib/models/golden",
+                  "--max_epochs", "160",
+                  "--default_root_dir", "/var/lib/models/golden-lr",
                   "--batch_size", "512",
                   "--gpus", "-1",
                   "--precision", "16",
+                  "--lr", "0.1",
+                  "--lr_schedule", "cosine",
                   "--target_size", "0.2",
                   "--progress_bar_refresh_ratio", "0.1",
           ]
@@ -61,7 +63,7 @@ spec:
             claimName: ocr-models-pvc
         - name: ocr-images
           persistentVolumeClaim:
-            claimName: ocr-images-pvc-golden
+            claimName: ocr-images-pvc-golden-lr
         - name: dshm
           emptyDir:
             medium: Memory

@@ -2,7 +2,7 @@ import argparse
 import logging
 
 from pytorch_lightning import Trainer
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
 from OCR.architecture.CharacterRecognizer import CharacterRecognizer
 from OCR.data.GeneratedImages import GeneratedImagesDataModule
@@ -30,7 +30,7 @@ if __name__ == '__main__':
         log.warning('Loading checkpoint from %s', args.resume_from_checkpoint)
         model = CharacterRecognizer.load_from_checkpoint(
             args.resume_from_checkpoint, vocab=datamodule.vocab, img_size=datamodule.size,
-            max_iterations=max_iterations
+            max_iterations=max_iterations, **dict_args
         )
     else:
         model = CharacterRecognizer(
@@ -39,7 +39,14 @@ if __name__ == '__main__':
         )
 
     trainer_callbacks = [
-        ModelCheckpoint(monitor='val_accuracy', save_top_k=10, save_last=True, verbose=True)
+        ModelCheckpoint(
+            monitor='val_accuracy',
+            mode='max',
+            save_top_k=10,
+            save_last=True,
+            verbose=True
+        ),
+        LearningRateMonitor()
     ]
     # chkpt_config = ModelCheckpoint(save_last=True, verbose=True)
 
@@ -52,3 +59,5 @@ if __name__ == '__main__':
         trainer.fit(model=model, datamodule=datamodule)
     if not args.no_test:
         trainer.test(model=model, datamodule=datamodule)
+
+    log.info('Best model score: %s > %s', trainer_callbacks[0].best_model_score, trainer_callbacks[0].best_model_path)
