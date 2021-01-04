@@ -62,7 +62,7 @@ class CharacterRecognizer(pl.LightningModule):
         self.accuracy = pl.metrics.Accuracy(compute_on_step=False)
         self.accuracy_len = pl.metrics.Accuracy(compute_on_step=False)
         self.confusion_matrix = ConfusionMatrix(self.vocab.noisy_chars)
-        self.confusion_matrix_len = ConfusionMatrix(list(map(str, range(15))))
+        self.confusion_matrix_len = ConfusionMatrix(list(map(str, range(w))))
 
     @staticmethod
     def add_model_specific_args(parent_parser):
