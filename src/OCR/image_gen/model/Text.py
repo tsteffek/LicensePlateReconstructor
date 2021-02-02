@@ -6,8 +6,8 @@ from PIL import ImageDraw
 from PIL.Image import Image
 from PIL.ImageFont import FreeTypeFont
 
-from OCR import IO
-from OCR.image_gen.model.Language import Language
+from src.OCR import IO
+from src.OCR.image_gen.model.Language import Language
 
 
 @dataclass

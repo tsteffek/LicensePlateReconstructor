@@ -1,7 +1,7 @@
 from typing import Iterable, List
 
-from OCR import IO
-from OCR.image_gen.model.Text import Character, Text
+from src.OCR import IO
+from src.OCR.image_gen.model.Text import Character, Text
 
 
 class Vocabulary:

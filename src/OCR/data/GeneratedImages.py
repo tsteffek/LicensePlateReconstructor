@@ -9,9 +9,9 @@ from PIL import Image
 from torch import Tensor
 from torch.utils.data import Dataset, DataLoader
 
-from OCR import IO
-from OCR.data.model.Vocabulary import Vocabulary
-from OCR.image_gen.model.Text import Text, TextImage
+from src.OCR import IO
+from src.OCR.data.model.Vocabulary import Vocabulary
+from src.OCR.image_gen.model.Text import Text, TextImage
 
 
 class GeneratedImages(Dataset):

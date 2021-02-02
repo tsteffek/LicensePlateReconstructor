@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ocr-images-pvc-golden-lr
+spec:
+  dataSource:
+    name: ocr-images-pvc-ranged
+    kind: PersistentVolumeClaim
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 25Gi
+
+---
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ocr-train-golden-lr
+spec:
+  template:
+    metadata:
+      labels:
+        app: ocr
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: lpr
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:878fa335b5e587fe40ff29e754bed310cef0d4f3
+          command: [ "python" ]
+          args: [ "bin/TrainOCR.py",
+                  "--resume_from_checkpoint", "/var/lib/models/best-no-lr/checkpoints/last.ckpt",
+                  "--path", "/var/lib/images",
+                  "--width_mult", "0.5",
+                  "--max_epochs", "160",
+                  "--default_root_dir", "/var/lib/models/golden-lr",
+                  "--batch_size", "512",
+                  "--gpus", "-1",
+                  "--precision", "16",
+                  "--lr", "0.1",
+                  "--lr_schedule", "cosine",
+                  "--target_size", "0.2",
+                  "--progress_bar_refresh_ratio", "0.1",
+          ]
+          resources:
+            requests:
+              nvidia.com/gpu: 1
+              memory: 80Gi
+            limits:
+              nvidia.com/gpu: 1
+              memory: 150Gi
+          volumeMounts:
+            - name: ocr-images
+              mountPath: /var/lib/images
+            - name: ocr-models
+              mountPath: /var/lib/models
+            - name: dshm
+              mountPath: /dev/shm
+      volumes:
+        - name: ocr-models
+          persistentVolumeClaim:
+            claimName: ocr-models-pvc
+        - name: ocr-images
+          persistentVolumeClaim:
+            claimName: ocr-images-pvc-golden-lr
+        - name: dshm
+          emptyDir:
+            medium: Memory
+      imagePullSecrets:
+        - name: private-registry-auth
+      nodeSelector:
+        gpu: a100

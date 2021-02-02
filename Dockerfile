@@ -8,7 +8,7 @@ RUN pip install pytorch-lightning===1.1.2 numpy jupyter pillow guppy3 pytorch_wa
 
 COPY data/ data/
 COPY bin/ bin/
-COPY OCR/ OCR/
-COPY LPR/ LPR/
+COPY src/OCR/ OCR/
+COPY src/LPR/ LPR/
 
 ENV PYTHONPATH="$PYTHONPATH:/OCR:/LPR"

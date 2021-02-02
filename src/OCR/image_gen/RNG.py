@@ -7,11 +7,10 @@ from PIL.Image import Image
 from PIL.ImageFont import FreeTypeFont
 from numpy import ndarray, array
 
-from OCR.image_gen.model import Images
-from OCR.image_gen.model.Language import Language, FontCache
-from OCR.image_gen.model.Text import Character, TextImage, ImageText
+from src.OCR.image_gen.model import Images
+from src.OCR.image_gen.model.Language import Language, FontCache
+from src.OCR.image_gen.model.Text import Character, ImageText, TextImage
 
-# rng = np.random.default_rng(42)
 rng = np.random.default_rng()
 
 

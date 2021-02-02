@@ -4,17 +4,17 @@ import logging
 import os
 from os import path
 from pathlib import Path
-from typing import Dict, List, Any, Tuple
+from typing import List, Any, Tuple
 
 from PIL import Image
 
-from OCR.image_gen.model.Language import Language
+from src.OCR.image_gen.model.Language import Language
 
 log = logging.getLogger(__name__)
 
 DATA_PATH = Path(os.getcwd()) / 'data'
 if not DATA_PATH.exists():
-    DATA_PATH = Path('../') / 'data'
+    DATA_PATH = Path('../../') / 'data'
 if not DATA_PATH.exists():
     raise IOError('data folder not found')
 
