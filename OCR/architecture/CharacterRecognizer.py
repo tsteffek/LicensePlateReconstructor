@@ -101,6 +101,12 @@ class CharacterRecognizer(pl.LightningModule):
         logits = nn.functional.log_softmax(output, dim=-1)
         return logits, self.loss_func(logits, targets, input_lengths, target_lengths)
 
+    def predict(self, x: Tensor):
+        output = self.forward(x)
+        logits = nn.functional.log_softmax(output, dim=-1).transpose(0, 1)
+        texts = self._decode_raw(logits)
+        return [self.vocab.decode_text(text) for text in texts]
+
     def step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]]) -> Tuple[Tensor, Tensor]:
         # profile()
         x, (_, y, y_lengths) = batch
@@ -129,7 +135,7 @@ class CharacterRecognizer(pl.LightningModule):
     def detailed_log(self, logits: Tensor, batch: Tuple[Tensor, Tuple[Tensor, Tensor]]):
         _, (_, y, y_lengths) = batch
 
-        predictions, pred_lengths = self._decode_raw(logits.transpose(0, 1))
+        predictions, pred_lengths = self.cat(self._decode_raw(logits.transpose(0, 1)))
 
         self.accuracy_len.update(pred_lengths, y_lengths)
         self.confusion_matrix_len.update(pred_lengths, y_lengths)
@@ -139,12 +145,14 @@ class CharacterRecognizer(pl.LightningModule):
         self.accuracy_cha.update(matching_pred, matching_targets)
         self.confusion_matrix.update(matching_pred, matching_targets)
 
-    def _decode_raw(self, logits: Tensor) -> Tuple[Tensor, Tensor]:
+    def _decode_raw(self, logits: Tensor) -> List[Tensor]:
         arg_max_batch = logits.argmax(dim=-1)
         uniques = [torch.unique_consecutive(arg_max) for arg_max in arg_max_batch]
-        unique_non_blank = [unique[unique != self.vocab.blank_idx] for unique in uniques]
-        pred_lengths = torch.tensor([len(pred) for pred in unique_non_blank], dtype=torch.int64, device=self.device)
-        return torch.cat(unique_non_blank), pred_lengths
+        return [unique[unique != self.vocab.blank_idx] for unique in uniques]
+
+    def cat(self, arr: List[Tensor]) -> Tuple[Tensor, Tensor]:
+        pred_lengths = torch.tensor([len(pred) for pred in arr], dtype=torch.int64, device=self.device)
+        return torch.cat(arr), pred_lengths
 
     @staticmethod
     def _get_matching_length_elements(pred: Tensor, pred_lengths: Tensor, target: Tensor, target_lengths: Tensor):
