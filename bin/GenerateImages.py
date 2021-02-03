@@ -4,8 +4,8 @@ import json
 import logging
 from time import process_time
 
-from src.OCR import IO
-from src.OCR.image_gen import RandomTextGenerator, RandomTextImageGenerator
+from src.OCR.image_gen.RNG import RandomTextImageGenerator, RandomTextGenerator
+from src.base import IO
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)

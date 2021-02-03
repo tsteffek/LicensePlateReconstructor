@@ -7,9 +7,11 @@ from PIL.Image import Image
 from PIL.ImageFont import FreeTypeFont
 from numpy import ndarray, array
 
+from src.OCR.GeneratedImages.model.Image import TypedImageWithText
 from src.OCR.image_gen.model import Images
 from src.OCR.image_gen.model.Language import Language, FontCache
-from src.OCR.image_gen.model.Text import Character, ImageText, TextImage
+from src.base.model import Character
+from src.base.model.Texts import ImageText
 
 rng = np.random.default_rng()
 
@@ -174,7 +176,7 @@ class RandomTextImageGenerator:
         self.text_rng = text_rng
         self.mode = mode
 
-    def __call__(self, num: int = None) -> Generator[TextImage, None, None]:
+    def __call__(self, num: int = None) -> Generator[TypedImageWithText, None, None]:
         if num is None:
             text_gen = self.text_rng()
         else:
@@ -186,7 +188,7 @@ class RandomTextImageGenerator:
 
             img_type, img = self.random_image(self.mode, self.size)
             text.draw_to_image_centered(img, random_color())
-            yield TextImage(text, img, img_type)
+            yield TypedImageWithText(img, text, img_type)
 
     @staticmethod
     def random_image(mode: str, size: Tuple[int, int]) -> Tuple[str, Image]:

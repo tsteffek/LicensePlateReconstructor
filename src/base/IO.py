@@ -12,11 +12,14 @@ from src.OCR.image_gen.model.Language import Language
 
 log = logging.getLogger(__name__)
 
-DATA_PATH = Path(os.getcwd()) / 'data'
-if not DATA_PATH.exists():
-    DATA_PATH = Path('../../') / 'data'
-if not DATA_PATH.exists():
-    raise IOError('data folder not found')
+DATA_PATH = Path(os.getcwd()) / 'img_gen_config'
+try:
+    move_upwards = ''
+    while not DATA_PATH.exists():
+        move_upwards += '../'
+        DATA_PATH = Path(move_upwards) / 'img_gen_config'
+except OSError:
+    raise IOError('img_gen_config folder not found')
 
 
 def create_path(*paths) -> Path:
@@ -56,8 +59,8 @@ def read_font_paths(data_path: str, language: str, name='*.*tf') -> List[str]:
     return glob.glob(path.join(data_path, language, 'fonts', name))
 
 
-def get_image_paths(path: str, image_files: str) -> List[str]:
-    return glob.glob(os.path.join(path, image_files), recursive=True)
+def get_image_paths(*paths: str) -> List[str]:
+    return glob.glob(os.path.join(*paths), recursive=True)
 
 
 def read_chars(data_path: str, language: str):

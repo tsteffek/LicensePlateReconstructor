@@ -1,18 +1,23 @@
-from typing import Iterable, List
+from typing import Iterable, List, Any
 
-from src.OCR import IO
-from src.OCR.image_gen.model.Text import Character, Text
+from . import Character, Text
+
+
+def distinct(arr: Iterable[Any]):
+    return list(dict.fromkeys(arr))
 
 
 class Vocabulary:
-    def __init__(self, path: str, language_file: str, special_tokens: Iterable[str] = None):
+    def __init__(self, chars: Iterable[str], noise=None, special_tokens: Iterable[str] = None):
+        if noise is None:
+            noise = []
         if special_tokens is None:
             special_tokens = ['_', '°']
-        self.special_tokens = special_tokens
 
-        all_chars, self.languages, noise = IO.load_languages_file(path, language_file)
+        self.special_tokens = special_tokens
         self.noise = set(noise)
-        self.chars = special_tokens + [char for char in all_chars if char not in self.noise]
+
+        self.chars = distinct(special_tokens + [char for char in chars if char not in self.noise])
         self.noisy_chars = self.chars + noise
 
         self.blank_idx = 0
@@ -34,7 +39,7 @@ class Vocabulary:
     def encode_char(self, char: Character):
         return self.encode_str(str(char))
 
-    def encode_text(self, text: Text):
+    def encode_text(self, text: Text) -> List[int]:
         return [self.encode_char(char) for char in text.chars]
 
     def decode_char(self, char: int) -> str:

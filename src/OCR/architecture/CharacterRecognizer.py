@@ -8,10 +8,9 @@ import torch
 from guppy import hpy
 from torch import nn, Tensor, optim
 
-from src.OCR.architecture.mobilenetv3 import mobilenetv3_small, mobilenetv3_large
-from src.OCR.architecture.util import Img2Seq, ConfusionMatrix
-from src.OCR.data.model.Vocabulary import Vocabulary
-from src.OCR.image_gen.model.Text import Text
+from src.base.model import Vocabulary, Text
+from .mobilenetv3 import mobilenetv3_small, mobilenetv3_large
+from .util import Img2Seq, ConfusionMatrix
 
 log = logging.getLogger("lightning").getChild(__name__)
 

@@ -188,7 +188,7 @@ class MobileNetV3(nn.Module):
 
 def mobilenetv3_large(**kwargs):
     """
-    Constructs a MobileNetV3-Large model
+    Constructs a MobileNetV3-Large CCPD
     """
     cfgs = [
         # k, t, c, SE, HS, s
@@ -213,7 +213,7 @@ def mobilenetv3_large(**kwargs):
 
 def mobilenetv3_small(**kwargs):
     """
-    Constructs a MobileNetV3-Small model
+    Constructs a MobileNetV3-Small CCPD
     """
     cfgs = [
         # k, t, c, SE, HS, s

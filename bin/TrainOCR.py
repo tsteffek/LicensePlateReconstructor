@@ -4,8 +4,8 @@ import logging
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
-from src.OCR import CharacterRecognizer
-from src.OCR import GeneratedImagesDataModule
+from src.OCR.GeneratedImages import GeneratedImagesDataModule
+from src.OCR.architecture import CharacterRecognizer
 
 log = logging.getLogger('lightning').getChild(__name__)
 

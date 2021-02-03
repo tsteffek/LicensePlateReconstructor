@@ -1,12 +1,11 @@
 from dataclasses import dataclass
-from typing import List, Tuple, Dict
+from typing import List, Tuple
 
 import numpy as np
 from PIL import ImageDraw
 from PIL.Image import Image
 from PIL.ImageFont import FreeTypeFont
 
-from src.OCR import IO
 from src.OCR.image_gen.model.Language import Language
 
 
@@ -32,7 +31,7 @@ class Character:
         return f'{self.language.id}-{self.char_idx}-{self.font_idx}-{self.size}'
 
     @classmethod
-    def from_string(cls, string: str, languages: Dict[int, Language]):
+    def from_string(cls, string: str, languages: List[Language]):
         language_id, char_idx, font_idx, size = map(int, string.split('-'))
         return cls(languages[language_id], char_idx, font_idx, size)
 
@@ -47,7 +46,7 @@ class Text:
         return '_'.join([char.to_string() for char in self.chars])
 
     @classmethod
-    def from_string(cls, string: str, languages: Dict[int, Language]):
+    def from_string(cls, string: str, languages: List[Language]):
         if len(string) == 0:
             return cls()
 
@@ -95,26 +94,3 @@ class ImageText(Text):
         for char, font, offset, height in zip(self.chars, self.fonts, self.offsets, self.heights):
             left_upper_point = (text_start + offset, (H - height) / 2)
             draw_ctx.text(left_upper_point, char.char, fill=fill, font=font)
-
-
-@dataclass
-class TextImage:
-    text: Text
-    img: Image
-    img_type: str
-
-    def to_string(self):
-        return f'{self.img_type}_{self.text.to_string()}'
-
-    @classmethod
-    def load(cls, path: str, languages: Dict[int, Language]):
-        file_name = IO.file_name(path)
-        if file_name.startswith('#'):
-            _, img_type, text_str = file_name.split('_', 2)
-        else:
-            img_type, text_str = file_name.split('_', 1)
-
-        img = IO.load_image(path)
-        text = Text.from_string(text_str, languages)
-
-        return cls(text, img, img_type)
