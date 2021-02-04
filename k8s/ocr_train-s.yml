@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: ocr-train-ranged-7-10-blarge
+  name: ocr-train-ranged-7-10-s
 spec:
   template:
     metadata:
@@ -10,8 +10,8 @@ spec:
     spec:
       restartPolicy: Never
       containers:
-        - name: lpr
-          image: registry.datexis.com/tsteffek/licenseplatereconstructor:3aab6778effd0cea919861f0d55fcf98f38d66e6
+        - name: ocr
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:a221c317e390ec60a5048aeac25b3ee883b1780c
           command: [ "python" ]
           args: [ "bin/TrainOCR.py",
                   "--path", "/var/lib/images",
@@ -20,22 +20,21 @@ spec:
                   "--max_epochs", "300",
                   "--min_epochs", "50",
                   "--default_root_dir", "/var/lib/models/range-7-10",
-                  "--batch_size", "3000",
-                  "--lr", "3e-4",
+                  "--batch_size", "1500",
+                  "--lr", "6e-4",
                   "--gpus", "-1",
                   "--precision", "16",
                   "--target_size", "0.2",
                   "--progress_bar_refresh_ratio", "0.1",
-            #                  "--auto_scale_batch_size", "binsearch",
-                  "--accelerator", "ddp"
+                  "--auto_scale_batch_size", "binsearch",
+            #                  "--accelerator", "ddp"
           ]
           resources:
             requests:
-              nvidia.com/gpu: 2
+              nvidia.com/gpu: 1
               memory: 200Gi
             limits:
-              nvidia.com/gpu: 2
-              memory: 300Gi
+              nvidia.com/gpu: 1
           volumeMounts:
             - name: ocr-images
               mountPath: /var/lib/images

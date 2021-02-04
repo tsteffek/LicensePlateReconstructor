@@ -192,3 +192,6 @@ class CharacterRecognizer(pl.LightningModule):
                 })
 
             return [optimizer], schedules
+
+    def on_epoch_end(self):
+        log.info('\n')
