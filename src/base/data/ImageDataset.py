@@ -34,7 +34,7 @@ class ImageDataset(Dataset):
             if type(target_size) is float:
                 self.resize = tuple(int(target_size * el) for el in self.resize)
 
-        w, h = load_fn(self.images[0]).img.size
+        w, h = self.resize
         self.size = h, w
 
     def __getitem__(self, item) -> Tuple[Tensor, Tuple[Text, Tensor]]:

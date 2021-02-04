@@ -12,5 +12,6 @@ class CCPDImagesDataModule(ImagesDataModule):
             load_fn=CCPDImage.load,
             encode_fn=self.vocab.encode_strings,
             image_file_glob=os.path.join(stage, self.image_file_glob),
-            precision=self.precision
+            precision=self.precision,
+            target_size=self.target_size
         )

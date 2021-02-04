@@ -32,7 +32,8 @@ class GeneratedImagesDataModule(ImagesDataModule):
             load_fn=self.load_fn,
             encode_fn=self.vocab.encode_text,
             image_file_glob=os.path.join(stage, self.image_file_glob),
-            precision=self.precision
+            precision=self.precision,
+            target_size=self.target_size
         )
 
     def load_fn(self, path) -> TypedImageWithText:
