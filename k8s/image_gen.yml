@@ -4,10 +4,11 @@ metadata:
   name: ocr-images-pvc-ranged-7-10
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 25Gi
+  storageClassName: shared
 
 ---
 
@@ -16,6 +17,7 @@ kind: Job
 metadata:
   name: ocr-image-gen-ranged-7-10
 spec:
+  parallelism: 20
   template:
     metadata:
       labels:
@@ -28,9 +30,9 @@ spec:
           command: [ "python" ]
           args: [ "bin/GenerateImages.py",
                   "--save_dir", "/var/lib/images",
-                  "--num_train", "500000",
-                  "--num_test", "50000",
-                  "--num_val", "50000",
+                  "--num_train", "25000",
+                  "--num_test", "2500",
+                  "--num_val", "2500",
                   "--width", "1387",
                   "--height", "445",
                   "--max_chars", "10",
@@ -41,10 +43,10 @@ spec:
           ]
           resources:
             requests:
-              cpu: 1
-              memory: 50Gi
+              cpu: 0.1
+              memory: 5Gi
             limits:
-              memory: 100Gi
+              memory: 10Gi
           volumeMounts:
             - name: ocr-images
               mountPath: /var/lib/images

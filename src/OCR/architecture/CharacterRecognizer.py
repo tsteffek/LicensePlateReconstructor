@@ -120,14 +120,14 @@ class CharacterRecognizer(pl.LightningModule):
 
     def validation_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int) -> Tensor:
         logits, loss = self.step(batch)
-        self.log('val_loss', loss, on_epoch=True)
+        self.log('val_loss', loss, on_epoch=True, sync_dist=True)
 
         self.detailed_log(logits, batch)
         return loss
 
     def test_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int):
         logits, loss = self.step(batch)
-        self.log('test_loss', loss, on_epoch=True)
+        self.log('test_loss', loss, on_epoch=True, sync_dist=True)
 
         self.detailed_log(logits, batch)
 
@@ -161,9 +161,9 @@ class CharacterRecognizer(pl.LightningModule):
     def log_epoch(self, stage: str):
         acc_len = self.accuracy_len.compute()
         acc_cha = self.accuracy_cha.compute()
-        self.log(f'{stage}_acc_len_epoch', acc_len)
-        self.log(f'{stage}_acc_cha_epoch', acc_cha)
-        self.log(f'{stage}_accuracy', acc_len * acc_cha)
+        self.log(f'{stage}_acc_len_epoch', acc_len, sync_dist=True)
+        self.log(f'{stage}_acc_cha_epoch', acc_cha, sync_dist=True)
+        self.log(f'{stage}_accuracy', acc_len * acc_cha, sync_dist=True)
         log.info(self.confusion_matrix_len.compute())
         log.info(self.confusion_matrix.compute())
 
