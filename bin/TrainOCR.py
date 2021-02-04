@@ -15,7 +15,7 @@ def auto_scale_batch_size(trainer, model, datamodule, dict_args):
     tuner = Tuner(trainer)
     new_batch_size = tuner.scale_batch_size(
         init_val=dict_args['batch_size'], mode=dict_args['auto_scale_batch_size'],
-        model=model, datamodule=datamodule, max_trials=1
+        model=model, datamodule=datamodule
     )
     model.hparams.batch_size = new_batch_size
     datamodule.batch_size = new_batch_size

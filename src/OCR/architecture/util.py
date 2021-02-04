@@ -1,9 +1,12 @@
+import logging
 from typing import Iterable, Any, List
 
 import torch
 from pytorch_lightning.metrics import Metric
 from torch import Tensor
 from torch import nn
+
+log = logging.getLogger('pytorch_lightning').getChild(__name__)
 
 
 class Img2Seq(nn.Module):
@@ -32,27 +35,30 @@ class ConfusionMatrix(Metric):
         if torch.max(self.matrix) == 0:
             return '\nConfusion Matrix: nothing registered.'
 
-        total = self.matrix.sum()
-        tp = self.matrix.diagonal().sum()
-        fp = total - tp
+        try:
+            total = self.matrix.sum()
+            tp = self.matrix.diagonal().sum()
+            fp = total - tp
 
-        str_matrix = '\nConfusion Matrix:\n' \
-                     f'Total: {total} | Correct: {tp} | Wrong: {fp} | Acc: {tp / total}' \
-                     '\n \t' + '\t'.join(self.classes) + '\tacc\ttotal'
+            str_matrix = '\nConfusion Matrix:\n' \
+                         f'Total: {total} | Correct: {tp} | Wrong: {fp} | Acc: {tp / total}' \
+                         '\n \t' + '\t'.join(self.classes) + '\tacc\ttotal'
 
-        row_totals = self.matrix.sum(dim=1)
-        row_accs = self.matrix.diagonal() / row_totals
-        for char, row, acc, total in zip(self.classes, self.matrix, row_accs, row_totals):
-            if total != 0:
-                str_matrix += f'\n{char}\t' + '\t'.join(tensor_to_list(row)) + \
-                              f'\t{tensor_to_string(acc)}\t{tensor_to_string(total)}'
+            row_totals = self.matrix.sum(dim=1)
+            row_accs = self.matrix.diagonal() / row_totals
+            for char, row, acc, total in zip(self.classes, self.matrix, row_accs, row_totals):
+                if total != 0:
+                    str_matrix += f'\n{char}\t' + '\t'.join(tensor_to_list(row)) + \
+                                  f'\t{tensor_to_string(acc)}\t{tensor_to_string(total)}'
 
-        col_totals = self.matrix.sum(dim=0)
-        col_accs = self.matrix.diagonal() / col_totals
-        str_matrix += '\n \t' + '\t'.join(tensor_to_list(col_accs))
-        str_matrix += '\n \t' + '\t'.join(tensor_to_list(col_totals))
+            col_totals = self.matrix.sum(dim=0)
+            col_accs = self.matrix.diagonal() / col_totals
+            str_matrix += '\n \t' + '\t'.join(tensor_to_list(col_accs))
+            str_matrix += '\n \t' + '\t'.join(tensor_to_list(col_totals))
 
-        return str_matrix
+            return str_matrix
+        except:
+            log.warning(f'Confusion Matrix failed for tensor of shape {self.matrix.shape}: {self.matrix}')
 
     def update(self, preds: Tensor, target: Tensor):
         # # this

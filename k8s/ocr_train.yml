@@ -11,29 +11,30 @@ spec:
       restartPolicy: Never
       containers:
         - name: lpr
-          image: registry.datexis.com/tsteffek/licenseplatereconstructor:b0e72c70b1982d306e3720afa417e0a1cf4f8d01
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:3aab6778effd0cea919861f0d55fcf98f38d66e6
           command: [ "python" ]
           args: [ "bin/TrainOCR.py",
                   "--path", "/var/lib/images",
                   "--width_mult", "0.5",
                   "--early_stopping",
-                  "--max_epochs", "200",
+                  "--max_epochs", "300",
                   "--min_epochs", "50",
                   "--default_root_dir", "/var/lib/models/range-7-10",
-                  "--batch_size", "2500",
-                  "--auto_scale_batch_size", "binsearch",
-                  "--lr", "4e-4",
+                  "--batch_size", "3000",
+                  "--lr", "3e-4",
                   "--gpus", "-1",
                   "--precision", "16",
                   "--target_size", "0.2",
                   "--progress_bar_refresh_ratio", "0.1",
+            #                  "--auto_scale_batch_size", "binsearch",
+                  "--accelerator", "ddp"
           ]
           resources:
             requests:
-              nvidia.com/gpu: 1
+              nvidia.com/gpu: 2
               memory: 200Gi
             limits:
-              nvidia.com/gpu: 1
+              nvidia.com/gpu: 2
               memory: 300Gi
           volumeMounts:
             - name: ocr-images
