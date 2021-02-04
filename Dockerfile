@@ -1,4 +1,4 @@
-FROM nvcr.io/nvidia/pytorch:20.12-py3
+FROM pytorch/pytorch:1.7.1-cuda11.0-cudnn8-devel
 
 RUN apt-get update --fix-missing && \
     rm -rf /var/lib/apt/lists/*
