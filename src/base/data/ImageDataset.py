@@ -10,7 +10,7 @@ from torch.utils.data import Dataset
 from src.base import IO
 from src.base.model import ImageWithText, Text
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('pytorch_lightning').getChild(__name__)
 
 
 class ImageDataset(Dataset):
@@ -25,7 +25,7 @@ class ImageDataset(Dataset):
         self.dtype = torch.float16 if precision == 16 else torch.float32
 
         self.images = IO.get_image_paths(self.path)
-        log.warning(f'Detected {len(self.images)} images in {self.path}')
+        log.info(f'Detected {len(self.images)} images in {self.path}')
 
         if type(target_size) is tuple:
             self.resize = target_size

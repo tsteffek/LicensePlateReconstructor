@@ -3,11 +3,27 @@ import logging
 
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor, EarlyStopping
+from pytorch_lightning.tuner.tuning import Tuner
 
 from src.OCR.GeneratedImages import GeneratedImagesDataModule
 from src.OCR.architecture import CharacterRecognizer
 
-log = logging.getLogger('lightning').getChild(__name__)
+log = logging.getLogger('pytorch_lightning').getChild(__name__)
+
+
+def auto_scale_batch_size(trainer, model, datamodule, dict_args):
+    tuner = Tuner(trainer)
+    new_batch_size = tuner.scale_batch_size(
+        init_val=dict_args['batch_size'], mode=dict_args['auto_scale_batch_size'],
+        model=model, datamodule=datamodule, max_trials=1
+    )
+    model.hparams.batch_size = new_batch_size
+    datamodule.batch_size = new_batch_size
+
+    # remove the flags, so we can call tune without repeating the search
+    trainer.auto_scale_batch_size = False
+    args.auto_scale_batch_size = False
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -64,6 +80,8 @@ if __name__ == '__main__':
 
     trainer = Trainer.from_argparse_args(args, callbacks=trainer_callbacks)
     if not args.no_train:
+        if args.auto_scale_batch_size:
+            auto_scale_batch_size(trainer=trainer, model=model, datamodule=datamodule, dict_args=dict_args)
         trainer.tune(model=model, datamodule=datamodule)
         trainer.fit(model=model, datamodule=datamodule)
     if not args.no_test:

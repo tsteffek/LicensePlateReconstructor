@@ -12,7 +12,7 @@ from src.base.model import Vocabulary, Text
 from .mobilenetv3 import mobilenetv3_small, mobilenetv3_large
 from .util import Img2Seq, ConfusionMatrix
 
-log = logging.getLogger("lightning").getChild(__name__)
+log = logging.getLogger('pytorch_lightning').getChild(__name__)
 
 
 def profile():
@@ -192,6 +192,3 @@ class CharacterRecognizer(pl.LightningModule):
                 })
 
             return [optimizer], schedules
-
-    def on_epoch_end(self):
-        log.info('\n')
