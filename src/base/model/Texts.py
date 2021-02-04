@@ -76,7 +76,7 @@ class ImageText(Text):
             self.offsets = [0]
         else:
             self.widths, self.heights = list(zip(
-                *(font.getsize(char.char) for (char, font) in zip(self.chars, self.fonts))
+                *(font.getbbox(char.char, anchor='lt')[-2:] for (char, font) in zip(self.chars, self.fonts))
             ))
 
             offsets = [0]
@@ -91,6 +91,7 @@ class ImageText(Text):
         W, H = img.size
         draw_ctx = ImageDraw.Draw(img)
         text_start = (W - self.width) / 2
+        img_center = H / 2
         for char, font, offset, height in zip(self.chars, self.fonts, self.offsets, self.heights):
-            left_upper_point = (text_start + offset, (H - height) / 2)
-            draw_ctx.text(left_upper_point, char.char, fill=fill, font=font)
+            left_upper_point = (text_start + offset, img_center)
+            draw_ctx.text(left_upper_point, char.char, fill=fill, font=font, anchor='lm')

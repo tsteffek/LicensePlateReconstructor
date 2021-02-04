@@ -6,9 +6,8 @@ RUN apt-get update --fix-missing && \
 RUN pip install pytorch-lightning===1.1.2 numpy jupyter pillow guppy3 pytorch_warmup && \
     rm -rf /var/lib/apt/lists/*
 
-COPY img_gen_config/ data/
+COPY img_gen_config/ img_gen_config/
 COPY bin/ bin/
-COPY src/OCR/ OCR/
-COPY src/LPR/ LPR/
+COPY src/ src/
 
-ENV PYTHONPATH="$PYTHONPATH:/OCR:/LPR"
+ENV PYTHONPATH="$PYTHONPATH:/src"

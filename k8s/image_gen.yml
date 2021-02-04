@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: ocr-images-pvc-ranged
+  name: ocr-images-pvc-ranged-7-10
 spec:
   accessModes:
     - ReadWriteOnce
@@ -14,7 +14,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: ocr-image-gen-ranged
+  name: ocr-image-gen-ranged-7-10
 spec:
   template:
     metadata:
@@ -24,13 +24,20 @@ spec:
       restartPolicy: Never
       containers:
         - name: lpr
-          image: registry.datexis.com/tsteffek/licenseplatereconstructor:e16950806ea2f738c66c65d2660d4530f86ffaf2
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:b7e6e310b58d55a1124a62e4976026119270975c
           command: [ "python" ]
           args: [ "bin/GenerateImages.py",
                   "--save_dir", "/var/lib/images",
                   "--num_train", "500000",
-                  "--num_test", "20000",
-                  "--num_val", "20000"
+                  "--num_test", "50000",
+                  "--num_val", "50000",
+                  "--width", "1387",
+                  "--height", "445",
+                  "--max_chars", "10",
+                  "--min_chars", "7",
+                  "--margin_xy", "10",
+                  "--min_char_width", "100",
+                  "--max_char_width", "140"
           ]
           resources:
             requests:
@@ -44,7 +51,7 @@ spec:
       volumes:
         - name: ocr-images
           persistentVolumeClaim:
-            claimName: ocr-images-pvc-ranged
+            claimName: ocr-images-pvc-ranged-7-10
       imagePullSecrets:
         - name: private-registry-auth
       nodeSelector:
