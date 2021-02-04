@@ -24,7 +24,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: lpr
-          image: registry.datexis.com/tsteffek/licenseplatereconstructor:b7e6e310b58d55a1124a62e4976026119270975c
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:2fa3af3a6c4efa8dcccdbc710c3d3718f71ac4e6
           command: [ "python" ]
           args: [ "bin/GenerateImages.py",
                   "--save_dir", "/var/lib/images",

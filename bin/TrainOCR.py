@@ -2,7 +2,7 @@ import argparse
 import logging
 
 from pytorch_lightning import Trainer
-from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
+from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor, EarlyStopping
 
 from src.OCR.GeneratedImages import GeneratedImagesDataModule
 from src.OCR.architecture import CharacterRecognizer
@@ -14,6 +14,7 @@ if __name__ == '__main__':
     parser.add_argument('--no_train', default=False, action='store_true')
     parser.add_argument('--no_test', default=False, action='store_true')
     parser.add_argument('--progress_bar_refresh_ratio', type=float)
+    parser.add_argument('--early_stopping', default=False, action='store_true')
     parser = CharacterRecognizer.add_model_specific_args(parser)
     parser = Trainer.add_argparse_args(parser)
     parser = GeneratedImagesDataModule.add_argparse_args(parser)
@@ -45,10 +46,18 @@ if __name__ == '__main__':
             save_top_k=10,
             save_last=True,
             verbose=True
-        ),
-        LearningRateMonitor()
+        )
     ]
-    # chkpt_config = ModelCheckpoint(save_last=True, verbose=True)
+    if args.lr_schedule:
+        trainer_callbacks.append(LearningRateMonitor())
+    if args.early_stopping:
+        trainer_callbacks.append(EarlyStopping(
+            monitor='val_accuracy',
+            min_delta=0.00,
+            patience=5,
+            verbose=True,
+            mode='max'
+        ))
 
     if args.progress_bar_refresh_ratio:
         args.progress_bar_refresh_rate = int(max_iterations * args.progress_bar_refresh_ratio)
