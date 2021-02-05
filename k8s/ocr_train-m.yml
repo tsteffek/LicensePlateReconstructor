@@ -11,7 +11,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: ocr
-          image: registry.datexis.com/tsteffek/licenseplatereconstructor:a221c317e390ec60a5048aeac25b3ee883b1780c
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:bdd3d6483c989c47778cbe484ef9ed885bc832ed
           command: [ "python" ]
           args: [ "bin/TrainOCR.py",
                   "--path", "/var/lib/images",
@@ -19,14 +19,12 @@ spec:
                   "--early_stopping",
                   "--max_epochs", "300",
                   "--min_epochs", "50",
-                  "--default_root_dir", "/var/lib/models/range-7-10",
+                  "--default_root_dir", "/var/lib/models/ranged-7-10",
                   "--batch_size", "3000",
                   "--lr", "6e-4",
                   "--gpus", "-1",
                   "--precision", "16",
-                  "--target_size", "0.2",
                   "--progress_bar_refresh_ratio", "0.1",
-            #                  "--auto_scale_batch_size", "binsearch",
                   "--accelerator", "ddp"
           ]
           resources:
@@ -35,7 +33,7 @@ spec:
               memory: 200Gi
             limits:
               nvidia.com/gpu: 2
-              memory: 300Gi
+              memory: 350Gi
           volumeMounts:
             - name: ocr-images
               mountPath: /var/lib/images
@@ -49,7 +47,7 @@ spec:
             claimName: ocr-models-pvc
         - name: ocr-images
           persistentVolumeClaim:
-            claimName: ocr-images-pvc-ranged-7-10
+            claimName: ocr-images-pvc-ranged-7-10-m
         - name: dshm
           emptyDir:
             medium: Memory

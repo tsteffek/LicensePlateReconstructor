@@ -76,7 +76,7 @@ if __name__ == '__main__':
         ))
 
     if args.progress_bar_refresh_ratio:
-        args.progress_bar_refresh_rate = int(max_iterations * args.progress_bar_refresh_ratio)
+        args.progress_bar_refresh_rate = int(datamodule.max_steps * args.progress_bar_refresh_ratio)
 
     trainer = Trainer.from_argparse_args(args, callbacks=trainer_callbacks)
     if not args.no_train:

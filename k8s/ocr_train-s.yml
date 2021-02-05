@@ -1,3 +1,19 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ocr-images-pvc-ranged-7-10-s
+spec:
+  dataSource:
+    name: ocr-images-pvc-ranged-7-10-m
+    kind: PersistentVolumeClaim
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 25Gi
+
+---
+
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -11,30 +27,30 @@ spec:
       restartPolicy: Never
       containers:
         - name: ocr
-          image: registry.datexis.com/tsteffek/licenseplatereconstructor:a221c317e390ec60a5048aeac25b3ee883b1780c
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:bdd3d6483c989c47778cbe484ef9ed885bc832ed
           command: [ "python" ]
           args: [ "bin/TrainOCR.py",
                   "--path", "/var/lib/images",
                   "--width_mult", "0.5",
                   "--early_stopping",
                   "--max_epochs", "300",
-                  "--min_epochs", "50",
-                  "--default_root_dir", "/var/lib/models/range-7-10",
-                  "--batch_size", "1500",
-                  "--lr", "6e-4",
+                  "--min_epochs", "150",
+                  "--default_root_dir", "/var/lib/models/ranged-7-10",
+                  "--batch_size", "1024",
+                  "--lr", "4e-4",
                   "--gpus", "-1",
                   "--precision", "16",
-                  "--target_size", "0.2",
                   "--progress_bar_refresh_ratio", "0.1",
-                  "--auto_scale_batch_size", "binsearch",
+                  "--auto_lr_find", "True"
             #                  "--accelerator", "ddp"
           ]
           resources:
             requests:
               nvidia.com/gpu: 1
-              memory: 200Gi
+              memory: 150Gi
             limits:
               nvidia.com/gpu: 1
+              memory: 300Gi
           volumeMounts:
             - name: ocr-images
               mountPath: /var/lib/images
@@ -48,7 +64,7 @@ spec:
             claimName: ocr-models-pvc
         - name: ocr-images
           persistentVolumeClaim:
-            claimName: ocr-images-pvc-ranged-7-10
+            claimName: ocr-images-pvc-ranged-7-10-s
         - name: dshm
           emptyDir:
             medium: Memory
