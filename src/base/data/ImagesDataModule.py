@@ -72,7 +72,7 @@ class ImagesDataModule(pl.LightningDataModule):
     ) -> Tuple[Tensor, Tuple[Iterable[Text], Tensor, Tensor]]:
         imgs, labels = list(zip(*batch))
         texts, label_indices = list(zip(*labels))
-        label_lengths = torch.tensor([len(label) for label in label_indices], dtype=torch.int32)
+        label_lengths = torch.tensor([len(label) for label in label_indices], dtype=torch.int64)
 
         return torch.stack(imgs), (np.array(texts, dtype=object), torch.cat(label_indices), label_lengths)
 

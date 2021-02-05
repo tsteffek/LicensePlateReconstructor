@@ -42,7 +42,7 @@ class ImageDataset(Dataset):
         ti = self.load_fn(image_path)
         ti.img = ti.img.resize(self.resize)
         labels = self.encode_fn(ti.text)
-        return to_torch_format(ti.img, self.dtype), (ti.text, torch.tensor(labels, dtype=torch.int32))
+        return to_torch_format(ti.img, self.dtype), (ti.text, torch.tensor(labels, dtype=torch.int64))
 
     def __len__(self):
         return len(self.images)

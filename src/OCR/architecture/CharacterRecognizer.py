@@ -156,8 +156,8 @@ class CharacterRecognizer(pl.LightningModule):
     @staticmethod
     def _get_matching_length_elements(pred: Tensor, pred_lengths: Tensor, target: Tensor, target_lengths: Tensor):
         mask: Tensor = pred_lengths.__eq__(target_lengths)
-        return pred[mask.repeat_interleave(pred_lengths.type(torch.int64))], \
-               target[mask.repeat_interleave(target_lengths.type(torch.int64))],
+        return pred[mask.repeat_interleave(pred_lengths)], \
+               target[mask.repeat_interleave(target_lengths)],
 
     def log_epoch(self, stage: str):
         acc_len = self.accuracy_len.compute()

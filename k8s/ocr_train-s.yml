@@ -17,7 +17,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: ocr-train-ranged-7-10-s
+  name: ocr-train-ranged-7-10
 spec:
   template:
     metadata:
@@ -27,7 +27,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: ocr
-          image: registry.datexis.com/tsteffek/licenseplatereconstructor:641a3dbc6eb1587b163b3107af9aff2d3d0c5357
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:be11fdadd90a26196d5585309b798dd7e7723900
           command: [ "python" ]
           args: [ "bin/TrainOCR.py",
                   "--path", "/var/lib/images",
@@ -37,9 +37,9 @@ spec:
                   "--min_epochs", "150",
                   "--default_root_dir", "/var/lib/models/ranged-7-10",
                   "--batch_size", "1024",
-                  "--lr", "0.001",
-                  "--lr_schedule", "cosine",
-                  "--lr_warm_up", "linear",
+                  "--lr", "0.002754228703338169",
+            #                  "--lr_schedule", "cosine",
+            #                  "--lr_warm_up", "linear",
                   "--gpus", "-1",
                   "--precision", "16",
                   "--progress_bar_refresh_ratio", "0.1",
