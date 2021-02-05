@@ -27,7 +27,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: ocr
-          image: registry.datexis.com/tsteffek/licenseplatereconstructor:bdd3d6483c989c47778cbe484ef9ed885bc832ed
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:641a3dbc6eb1587b163b3107af9aff2d3d0c5357
           command: [ "python" ]
           args: [ "bin/TrainOCR.py",
                   "--path", "/var/lib/images",
@@ -37,11 +37,13 @@ spec:
                   "--min_epochs", "150",
                   "--default_root_dir", "/var/lib/models/ranged-7-10",
                   "--batch_size", "1024",
-                  "--lr", "4e-4",
+                  "--lr", "0.001",
+                  "--lr_schedule", "cosine",
+                  "--lr_warm_up", "linear",
                   "--gpus", "-1",
                   "--precision", "16",
                   "--progress_bar_refresh_ratio", "0.1",
-                  "--auto_lr_find", "True"
+            #                  "--auto_lr_find", "True" # for 1024: 0.002754228703338169
             #                  "--accelerator", "ddp"
           ]
           resources:

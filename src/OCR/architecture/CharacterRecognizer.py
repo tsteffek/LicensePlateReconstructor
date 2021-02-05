@@ -24,7 +24,7 @@ class CharacterRecognizer(pl.LightningModule):
             self, vocab: Vocabulary, img_size: Tuple[int, int], max_iterations: int,
             mobile_net_variant: str = 'small', width_mult: float = 1.,
             first_filter_shape: Union[Tuple[int, int], int] = 3, first_filter_stride: Union[Tuple[int, int], int] = 2,
-            lstm_hidden: int = 48, lr: float = 1e-4, lr_schedule: str = None, lr_warm_up: bool = False,
+            lstm_hidden: int = 48, lr: float = 1e-4, lr_schedule: str = None, lr_warm_up: str = None,
             ctc_reduction: str = 'mean', **kwargs
     ):
         super().__init__()
@@ -52,7 +52,7 @@ class CharacterRecognizer(pl.LightningModule):
         self.fc = nn.Linear(lstm_hidden * 2, len(self.vocab))
         self.output_size = torch.tensor(w, dtype=torch.int64, device=self.device)
 
-        self.loss_func = nn.CTCLoss(reduction=ctc_reduction)
+        self.loss_func = nn.CTCLoss(reduction=ctc_reduction, zero_infinity=True)
 
         self.lr = lr
         self.max_steps = max_iterations
@@ -74,7 +74,7 @@ class CharacterRecognizer(pl.LightningModule):
         parser.add_argument('--lstm_hidden', type=int, default=48)
         parser.add_argument('--lr', type=float, default=1e-4)
         parser.add_argument('--lr_schedule', type=str, default=None, choices=['cosine', None])
-        parser.add_argument('--lr_warm_up', default=False, action='store_true')
+        parser.add_argument('--lr_warm_up', type=str, default=None, choices=['linear', 'exponential', None])
         parser.add_argument('--ctc_reduction', type=str, default='mean', choices=['mean', 'sum', None])
 
         return parser
@@ -156,7 +156,8 @@ class CharacterRecognizer(pl.LightningModule):
     @staticmethod
     def _get_matching_length_elements(pred: Tensor, pred_lengths: Tensor, target: Tensor, target_lengths: Tensor):
         mask: Tensor = pred_lengths.__eq__(target_lengths)
-        return pred[mask.repeat_interleave(pred_lengths)], target[mask.repeat_interleave(target_lengths)],
+        return pred[mask.repeat_interleave(pred_lengths.type(torch.int64))], \
+               target[mask.repeat_interleave(target_lengths.type(torch.int64))],
 
     def log_epoch(self, stage: str):
         acc_len = self.accuracy_len.compute()
@@ -184,7 +185,13 @@ class CharacterRecognizer(pl.LightningModule):
                 'interval': 'step',
             }]
             if self.lr_warm_up:
-                warmup_scheduler = warmup.UntunedExponentialWarmup(optimizer)
+                if self.lr_warm_up == 'linear':
+                    warmup_scheduler = warmup.UntunedLinearWarmup(optimizer)
+                elif self.lr_warm_up == 'exponential':
+                    warmup_scheduler = warmup.UntunedExponentialWarmup(optimizer)
+                else:
+                    raise ValueError('lr_warm_up can only be "linear" or "exponential", but was ' + self.lr_warm_up)
+
                 warmup_scheduler.step = warmup_scheduler.dampen
                 schedules.append({
                     'scheduler': warmup_scheduler,

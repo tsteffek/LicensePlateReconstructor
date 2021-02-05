@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: resize
+spec:
+  template:
+    metadata:
+      labels:
+        app: ocr
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: resize
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:bdd3d6483c989c47778cbe484ef9ed885bc832ed
+          command: [ "python" ]
+          args: [ "bin/Resize.py",
+                  "--source", "/var/lib/images/",
+                  "--target_size", "0.2",
+                  "--worker", "64" ]
+          resources:
+            requests:
+              memory: 20Gi
+          volumeMounts:
+            - name: ocr-images
+              mountPath: /var/lib/images
+      volumes:
+        - name: ocr-images
+          persistentVolumeClaim:
+            claimName: ocr-images-pvc-ranged-7-10-m
+      imagePullSecrets:
+        - name: private-registry-auth
