@@ -2,8 +2,8 @@ import argparse
 import os
 from pathlib import Path
 
-from LPR.CCPD.model.Image import CCPDImage
-from base import IO
+from src.LPR.CCPD.model.Image import CCPDImage
+from src.base import IO
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

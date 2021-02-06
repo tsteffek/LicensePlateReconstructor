@@ -1,8 +1,8 @@
 import logging
 
-from LPR.CCPD.DataModule import CCPDImagesDataModule
-from LPR.architecture import Reconstructor
 from bin.TrainOCR import make_parser, load_or_create, setup_trainer, tune_and_fit
+from src.LPR.CCPD.DataModule import CCPDImagesDataModule
+from src.LPR.architecture import Reconstructor
 
 log = logging.getLogger('pytorch_lightning').getChild(__name__)
 

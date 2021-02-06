@@ -9,7 +9,7 @@ import torch
 from PIL.Image import Image
 from torch import Tensor, optim, nn
 
-from OCR.architecture import CharacterRecognizer
+from src.OCR.architecture import CharacterRecognizer
 from .networks import ResnetGenerator, RhoClipper
 
 log = logging.getLogger('pytorch_lightning').getChild(__name__)

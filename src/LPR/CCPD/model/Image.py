@@ -30,7 +30,7 @@ class CCPDImage(ImageWithText):
     blurriness: int
 
     @classmethod
-    def load(cls, path: str, cropped: bool = True):
+    def load(cls, path: str, cropped: bool = False):
         file_name = IO.file_name(path)
         area, tilt, bb_coords_raw, four_vertices_raw, lp_num_raw, brightness, blurriness = \
             split(file_name, ['-', '_', '&'])

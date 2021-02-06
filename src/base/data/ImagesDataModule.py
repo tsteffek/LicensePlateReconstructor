@@ -9,7 +9,7 @@ import torch
 from torch import Tensor
 from torch.utils.data import Dataset, DataLoader
 
-from base.data import ImageDataset
+from src.base.data import ImageDataset
 from src.base.model import Vocabulary, Text
 
 

@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: lpr-images-pvc
+spec:
+  dataSource:
+    name: lpr-images-pvc
+    kind: PersistentVolumeClaim
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+
+---
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: lpr-train
+spec:
+  template:
+    metadata:
+      labels:
+        app: lpr
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: lpr
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:1d22e405250d4aa9f5cec0e1a9a82a99e67a2d20
+          command: [ "python" ]
+          args: [ "bin/TrainOCR.py",
+                  "--ocr_path", "/var/lib/models/ranged-7-10/lightning_logs/version_29/checkpoints/epoch=64-step=18120.ckpt",
+                  "--path", "/var/lib/images",
+                  "--early_stopping",
+                  "--max_epochs", "100",
+                  "--min_epochs", "20",
+                  "--default_root_dir", "/var/lib/models/lpr/overfit",
+                  "--batch_size", "1024",
+                  "--lr", "0.0001",
+                  "--gpus", "-1",
+                  "--precision", "16",
+                  "--progress_bar_refresh_ratio", "0.1",
+                  "--auto_lr_find", "True",
+            #                  "--overfit_batches", "10",
+            #                  "--accelerator", "ddp"
+          ]
+          resources:
+            requests:
+              nvidia.com/gpu: 1
+              memory: 100Gi
+            limits:
+              nvidia.com/gpu: 1
+              memory: 200Gi
+          volumeMounts:
+            - name: lpr-images
+              mountPath: /var/lib/images
+            - name: ocr-models
+              mountPath: /var/lib/models
+            - name: dshm
+              mountPath: /dev/shm
+      volumes:
+        - name: ocr-models
+          persistentVolumeClaim:
+            claimName: ocr-models-pvc
+        - name: lpr-images
+          persistentVolumeClaim:
+            claimName: lpr-images-pvc
+        - name: dshm
+          emptyDir:
+            medium: Memory
+      imagePullSecrets:
+        - name: private-registry-auth
+      nodeSelector:
+        gpu: a100

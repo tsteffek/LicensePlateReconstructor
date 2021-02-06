@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: lpr-images-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ccpd-images-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 40Gi
+
+---
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ccpd-preprocess
+spec:
+  template:
+    metadata:
+      labels:
+        app: ocr
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: resize
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:c0be9b6f9d966adc34c6752a95ee05ef8544bab8
+          command: [ "sleep" ]
+          args: [ "infinity" ]
+          resources:
+            requests:
+              memory: 40Gi
+          volumeMounts:
+            - name: lpr-images
+              mountPath: /var/lib/images
+            - name: ccpd
+              mountPath: /var/lib/ccpd
+      volumes:
+        - name: lpr-images
+          persistentVolumeClaim:
+            claimName: lpr-images-pvc
+        - name: ccpd
+          persistentVolumeClaim:
+            claimName: ccpd-images-pvc
+      imagePullSecrets:
+        - name: private-registry-auth
+      nodeSelector:
+        cpu: epyc-7542
