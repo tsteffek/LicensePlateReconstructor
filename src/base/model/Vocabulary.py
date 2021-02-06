@@ -45,5 +45,5 @@ class Vocabulary:
     def decode_char(self, char: int) -> str:
         return self.chars[char]
 
-    def decode_text(self, text: Iterable[int]) -> List[str]:
-        return [self.decode_char(char) for char in text if char != self.blank_idx]
+    def decode_text(self, text: Iterable[int]) -> str:
+        return ''.join([self.decode_char(char) for char in text if char != self.blank_idx])

@@ -3,9 +3,9 @@ import os
 from typing import Tuple, List, Callable, Union
 
 import torch
-from PIL import Image
 from torch import Tensor
 from torch.utils.data import Dataset
+from torchvision.transforms import ToTensor
 
 from src.base import IO
 from src.base.model import ImageWithText, Text
@@ -36,17 +36,14 @@ class ImageDataset(Dataset):
 
         w, h = self.resize
         self.size = h, w
+        self.toTorchTensor = ToTensor()
 
     def __getitem__(self, item) -> Tuple[Tensor, Tuple[Text, Tensor]]:
         image_path = self.images[item]
         ti = self.load_fn(image_path)
         ti.img = ti.img.resize(self.resize)
         labels = self.encode_fn(ti.text)
-        return to_torch_format(ti.img, self.dtype), (ti.text, torch.tensor(labels, dtype=torch.int64))
+        return self.toTorchTensor(ti.img), (ti.text, torch.tensor(labels, dtype=torch.int64))
 
     def __len__(self):
         return len(self.images)
-
-
-def to_torch_format(img: Image, dtype: torch.dtype) -> Tensor:
-    return torch.tensor(img.getdata(), dtype=dtype).reshape(*img.size, -1).T / 255

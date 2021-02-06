@@ -18,7 +18,7 @@ class Reconstructor(pl.LightningModule):
     def __init__(
             self, ocr_path: str,
             base_channel_number: int = 64, res_blocks: int = 6, light: bool = False,
-            log_images_per_epoch: int = 3,
+            log_per_epoch: int = 3,
             lr: float = 1e-4, lr_schedule: str = None, lr_warm_up: str = None,
             ctc_reduction: str = 'mean', mode: str = 'PI-REC',
             **kwargs
@@ -45,7 +45,7 @@ class Reconstructor(pl.LightningModule):
 
         self.forward = self.model.forward
 
-        self.log_images_per_epoch = log_images_per_epoch
+        self.log_results = log_per_epoch
 
         self.lr = lr
         self.lr_schedule = lr_schedule
@@ -90,36 +90,44 @@ class Reconstructor(pl.LightningModule):
         #     x_hat, cam_logits, heatmap = self.forward(x)
         return x_hat, self.ocr.step((x_hat, y))
 
+    def step_with_logging(
+            self, stage: str, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], return_probe: bool
+    ) -> Tuple[Tensor, Tuple[Tensor, Tensor, str]]:
+        preds, (logits, loss) = self.step(batch)
+        self.log(f'{stage}_loss', loss, on_epoch=True, sync_dist=True)
+
+        decoded = self.ocr.decode_raw(logits)
+        self.ocr.update_metrics(decoded, batch)
+
+        if return_probe:
+            return preds[0], (decoded[0], batch[0][0], batch[1][0][0])
+
     def training_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int) -> Tensor:
         preds, (logits, loss) = self.step(batch)
         self.log('train_loss', loss)
         return loss
 
-    def validation_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int):
-        preds, (logits, loss) = self.step(batch)
-        self.log('val_loss', loss, on_epoch=True, sync_dist=True)
-        self.ocr.detailed_log(logits, batch)
-        return preds[0], batch[0][0]
+    def validation_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int
+                        ) -> Tuple[Tensor, Tuple[Tensor, Tensor, str]]:
+        return self.step_with_logging('val', batch, batch_idx < self.log_results)
 
-    def test_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int):
-        preds, (logits, loss) = self.step(batch)
-        self.log('test_loss', loss, on_epoch=True, sync_dist=True)
-        self.ocr.detailed_log(logits, batch)
-        return preds[0], batch[0][0]
-
-    def log_epoch(self, stage: str, outputs: List[Tuple[Tensor, Tensor]]):
-        predicted_images = torch.stack([output[0] for output in outputs[:self.log_images_per_epoch]])
-        original_images = torch.stack([output[1] for output in outputs[:self.log_images_per_epoch]])
-        self.logger.experiment.add_images(f'{stage}_orig', original_images, self.global_step)
-        self.logger.experiment.add_images(f'{stage}_pred', predicted_images, self.global_step)
+    def test_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int
+                  ) -> Tuple[Tensor, Tuple[Tensor, Tensor, str]]:
+        return self.step_with_logging('test', batch, batch_idx < self.log_results)
 
     def validation_epoch_end(self, outputs: List[Tuple[Tensor, Tensor]]) -> None:
         self.log_epoch('val', outputs)
-        self.ocr.validation_epoch_end()
 
     def test_epoch_end(self, outputs: List[Tuple[Tensor, Tensor]]) -> None:
-        self.log_epoch('val', outputs)
-        self.ocr.test_epoch_end()
+        self.log_epoch('test', outputs)
+
+    def log_epoch(self, stage: str, outputs: List[Tuple[Tensor, Tensor]]):
+        lpr_output, ocr_output = list(zip(*outputs))
+        predicted_images = torch.stack(lpr_output)
+
+        self.logger.experiment.add_images(f'{stage}_pred', predicted_images, self.global_step)
+        self.ocr.logger = self.logger
+        self.ocr.log_epoch(stage, ocr_output)
 
     def configure_optimizers(self):
         if self.lr_schedule is None:
@@ -150,7 +158,3 @@ class Reconstructor(pl.LightningModule):
 
     def on_epoch_end(self):
         log.info('\n')
-
-    @staticmethod
-    def _to_image(arr: Tensor) -> Image:
-        return Image.fromarray(arr, 'RGB')

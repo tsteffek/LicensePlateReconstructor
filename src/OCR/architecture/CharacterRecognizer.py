@@ -1,13 +1,13 @@
 import logging
 from argparse import ArgumentParser
-from typing import Tuple, List, Iterable, Union
+from typing import Tuple, List, Union
 
 import pytorch_lightning as pl
 import pytorch_warmup as warmup
 import torch
 from torch import nn, Tensor, optim
 
-from src.base.model import Vocabulary, Text
+from src.base.model import Vocabulary
 from .mobilenetv3 import mobilenetv3_small, mobilenetv3_large
 from .util import Img2Seq, ConfusionMatrix
 
@@ -19,7 +19,9 @@ class CharacterRecognizer(pl.LightningModule):
             self, vocab: Vocabulary, img_size: Tuple[int, int],
             mobile_net_variant: str = 'small', width_mult: float = 1.,
             first_filter_shape: Union[Tuple[int, int], int] = 3, first_filter_stride: Union[Tuple[int, int], int] = 2,
-            lstm_hidden: int = 48, lr: float = 1e-4, lr_schedule: str = None, lr_warm_up: str = None,
+            lstm_hidden: int = 48,
+            log_per_epoch: int = 3,
+            lr: float = 1e-4, lr_schedule: str = None, lr_warm_up: str = None,
             ctc_reduction: str = 'mean', **kwargs
     ):
         super().__init__()
@@ -53,6 +55,7 @@ class CharacterRecognizer(pl.LightningModule):
         self.lr_schedule = lr_schedule
         self.lr_warm_up = lr_warm_up
 
+        self.log_results = log_per_epoch
         self.accuracy_cha = pl.metrics.Accuracy(compute_on_step=False)
         self.accuracy_len = pl.metrics.Accuracy(compute_on_step=False)
         self.confusion_matrix = ConfusionMatrix(self.vocab.noisy_chars)
@@ -89,10 +92,10 @@ class CharacterRecognizer(pl.LightningModule):
         logits = nn.functional.log_softmax(output, dim=-1)
         return logits, self.loss_func(logits, targets, input_lengths, target_lengths)
 
-    def predict(self, x: Tensor) -> List[List[str]]:
+    def predict(self, x: Tensor) -> List[str]:
         output = self.forward(x)
-        logits = nn.functional.log_softmax(output, dim=-1).transpose(0, 1)
-        texts = self._decode_raw(logits)
+        logits = nn.functional.log_softmax(output, dim=-1)
+        texts = self.decode_raw(logits.transpose(0, 1))
         return [self.vocab.decode_text(text) for text in texts]
 
     def step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]]) -> Tuple[Tensor, Tensor]:
@@ -101,41 +104,45 @@ class CharacterRecognizer(pl.LightningModule):
         batch_size = x_hat.shape[1]
         return self.loss(x_hat, y, self.conv_output_size.repeat(batch_size), y_lengths)
 
+    def step_with_logging(
+            self, stage: str, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], return_probe: bool
+    ) -> Tuple[Tensor, Tensor, str]:
+        logits, loss = self.step(batch)
+        self.log(f'{stage}_loss', loss, on_epoch=True, sync_dist=True)
+
+        decoded = self.decode_raw(logits)
+        self.update_metrics(decoded, batch)
+
+        if return_probe:
+            return decoded[0], batch[0][0], batch[1][0][0]
+
     def training_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int) -> Tensor:
         loss = self.step(batch)[1]
         self.log('train_loss', loss, on_step=True, on_epoch=True)
         return loss
 
-    def validation_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int) -> Tensor:
-        logits, loss = self.step(batch)
-        self.log('val_loss', loss, on_epoch=True, sync_dist=True)
+    def validation_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int) -> Tuple[
+        Tensor, Tensor, str]:
+        return self.step_with_logging('val', batch, batch_idx < self.log_results)
 
-        self.detailed_log(logits, batch)
-        return loss
+    def test_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int) -> Tuple[Tensor, Tensor, str]:
+        return self.step_with_logging('test', batch, batch_idx < self.log_results)
 
-    def test_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int):
-        logits, loss = self.step(batch)
-        self.log('test_loss', loss, on_epoch=True, sync_dist=True)
-
-        self.detailed_log(logits, batch)
-
-    def detailed_log(self, logits: Tensor, batch: Tuple[Tensor, Tuple[Tensor, Tensor]]):
+    def update_metrics(self, decoded: List[Tensor], batch: Tuple[Tensor, Tuple[Tensor, Tensor]]):
+        predictions, pred_lengths = self.cat(decoded)
         _, (_, y, y_lengths) = batch
-
-        predictions, pred_lengths = self.cat(self._decode_raw(logits.transpose(0, 1)))
+        matching_pred, matching_targets = self._get_matching_length_elements(predictions, pred_lengths, y, y_lengths)
 
         self.accuracy_len.update(pred_lengths, y_lengths)
         self.confusion_matrix_len.update(pred_lengths, y_lengths)
 
-        matching_pred, matching_targets = self._get_matching_length_elements(predictions, pred_lengths, y, y_lengths)
-
         self.accuracy_cha.update(matching_pred, matching_targets)
         self.confusion_matrix.update(matching_pred, matching_targets)
 
-    def _decode_raw(self, logits: Tensor) -> List[Tensor]:
-        arg_max_batch = logits.argmax(dim=-1)
-        uniques = [torch.unique_consecutive(arg_max) for arg_max in arg_max_batch]
-        return [unique[unique != self.vocab.blank_idx] for unique in uniques]
+    def decode_raw(self, logits: Tensor) -> List[Tensor]:
+        arg_max_batch = logits.transpose(0, 1).argmax(dim=-1)
+        uniques_batch = [torch.unique_consecutive(arg_max) for arg_max in arg_max_batch]
+        return [uniques[uniques != self.vocab.blank_idx] for uniques in uniques_batch]
 
     def cat(self, arr: List[Tensor]) -> Tuple[Tensor, Tensor]:
         pred_lengths = torch.tensor([len(pred) for pred in arr], dtype=torch.int64, device=self.device)
@@ -147,7 +154,13 @@ class CharacterRecognizer(pl.LightningModule):
         return pred[mask.repeat_interleave(pred_lengths)], \
                target[mask.repeat_interleave(target_lengths)],
 
-    def log_epoch(self, stage: str):
+    def validation_epoch_end(self, outputs: List[Tuple[Tensor, Tensor, str]]) -> None:
+        self.log_epoch('val', outputs)
+
+    def test_epoch_end(self, outputs: List[Tuple[Tensor, Tensor, str]]) -> None:
+        self.log_epoch('test', outputs)
+
+    def log_epoch(self, stage: str, outputs: List[Tuple[Tensor, Tensor, str]]):
         acc_len = self.accuracy_len.compute()
         acc_cha = self.accuracy_cha.compute()
         self.log(f'{stage}_acc_len_epoch', acc_len, sync_dist=True)
@@ -156,11 +169,11 @@ class CharacterRecognizer(pl.LightningModule):
         log.info(self.confusion_matrix_len.compute())
         log.info(self.confusion_matrix.compute())
 
-    def validation_epoch_end(self, outputs: List[Tuple[Iterable[Text], Iterable[Iterable[str]]]] = None) -> None:
-        self.log_epoch('val')
+        predictions = [f'"{self.vocab.decode_text(output[0])}" is actually "{output[2]}"' for output in outputs]
+        original_images = torch.stack([output[1] for output in outputs])
 
-    def test_epoch_end(self, outputs: List[Tuple[Iterable[Text], Iterable[Iterable[str]]]] = None) -> None:
-        self.log_epoch('test')
+        self.logger.experiment.add_images(f'{stage}_orig', original_images, self.global_step)
+        self.logger.experiment.add_text(f'{stage}_pred', '<br/>'.join(predictions), self.global_step)
 
     def configure_optimizers(self):
         if self.lr_schedule is None:
