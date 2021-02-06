@@ -99,21 +99,27 @@ class Reconstructor(pl.LightningModule):
         preds, (logits, loss) = self.step(batch)
         self.log('val_loss', loss, on_epoch=True, sync_dist=True)
         self.ocr.detailed_log(logits, batch)
-        return preds
+        return preds[0], batch[0][0]
 
     def test_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int):
         preds, (logits, loss) = self.step(batch)
         self.log('test_loss', loss, on_epoch=True, sync_dist=True)
         self.ocr.detailed_log(logits, batch)
-        return preds
+        return preds[0], batch[0][0]
 
-    def validation_epoch_end(self, outputs: List[Tensor]) -> None:
+    def log_epoch(self, stage: str, outputs: List[Tuple[Tensor, Tensor]]):
+        predicted_images = torch.stack([output[0] for output in outputs[:self.log_images_per_epoch]])
+        original_images = torch.stack([output[1] for output in outputs[:self.log_images_per_epoch]])
+        self.logger.experiment.add_images(f'{stage}_orig', original_images, self.global_step)
+        self.logger.experiment.add_images(f'{stage}_pred', predicted_images, self.global_step)
+
+    def validation_epoch_end(self, outputs: List[Tuple[Tensor, Tensor]]) -> None:
+        self.log_epoch('val', outputs)
         self.ocr.validation_epoch_end()
-        self.logger.experiment.add_images('val', outputs[0][:self.log_images_per_epoch], self.global_step)
 
-    def test_epoch_end(self, outputs: List[Tensor]) -> None:
+    def test_epoch_end(self, outputs: List[Tuple[Tensor, Tensor]]) -> None:
+        self.log_epoch('val', outputs)
         self.ocr.test_epoch_end()
-        self.logger.experiment.add_images('test', outputs[0][:self.log_images_per_epoch], self.global_step)
 
     def configure_optimizers(self):
         if self.lr_schedule is None:
