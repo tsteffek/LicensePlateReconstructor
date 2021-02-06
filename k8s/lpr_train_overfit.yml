@@ -27,12 +27,12 @@ spec:
       restartPolicy: Never
       containers:
         - name: lpr
-          image: registry.datexis.com/tsteffek/licenseplatereconstructor:359814debc2d4cb8c44c38ebe88243cc87c1183d
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:730a88121e24544c3567dc443bcfc60b932ed6fd
           command: [ "python" ]
           args: [ "bin/TrainLPR.py",
                   "--ocr_path", "/var/lib/models/ranged-7-10/lightning_logs/version_29/checkpoints/epoch=64-step=18120.ckpt",
                   "--path", "/var/lib/images",
-                  "--early_stopping",
+            #                  "--early_stopping",
                   "--max_epochs", "100",
                   "--min_epochs", "20",
                   "--default_root_dir", "/var/lib/models/lpr/overfit",
@@ -41,17 +41,17 @@ spec:
                   "--gpus", "-1",
                   "--precision", "16",
                   "--progress_bar_refresh_ratio", "0.1",
-            #                  "--auto_lr_find", "True",
+                  "--auto_lr_find", "True",
                   "--overfit_batches", "10",
             #                  "--accelerator", "ddp"
           ]
           resources:
             requests:
               nvidia.com/gpu: 1
-              memory: 100Gi
+              memory: 50Gi
             limits:
               nvidia.com/gpu: 1
-              memory: 200Gi
+              memory: 100Gi
           volumeMounts:
             - name: lpr-images
               mountPath: /var/lib/images

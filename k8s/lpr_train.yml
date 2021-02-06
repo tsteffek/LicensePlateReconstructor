@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: lpr-images-pvc
+  name: lpr-images-pvc-lr-find
 spec:
   dataSource:
     name: lpr-images-pvc
@@ -17,7 +17,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: lpr-train
+  name: lpr-train-lr-find
 spec:
   template:
     metadata:
@@ -27,7 +27,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: lpr
-          image: registry.datexis.com/tsteffek/licenseplatereconstructor:359814debc2d4cb8c44c38ebe88243cc87c1183d
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:730a88121e24544c3567dc443bcfc60b932ed6fd
           command: [ "python" ]
           args: [ "bin/TrainLPR.py",
                   "--ocr_path", "/var/lib/models/ranged-7-10/lightning_logs/version_29/checkpoints/epoch=64-step=18120.ckpt",
@@ -41,7 +41,7 @@ spec:
                   "--gpus", "-1",
                   "--precision", "16",
                   "--progress_bar_refresh_ratio", "0.1",
-            #                  "--auto_lr_find", "True",
+                  "--auto_lr_find", "True",
                   "--limit_val_batches", "0.1",
             #                  "--overfit_batches", "10",
             #                  "--accelerator", "ddp"
@@ -66,7 +66,7 @@ spec:
             claimName: ocr-models-pvc
         - name: lpr-images
           persistentVolumeClaim:
-            claimName: lpr-images-pvc
+            claimName: lpr-images-pvc-lr-find
         - name: dshm
           emptyDir:
             medium: Memory

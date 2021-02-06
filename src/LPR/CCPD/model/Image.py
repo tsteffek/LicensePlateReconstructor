@@ -14,7 +14,7 @@ ads = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q'
 
 
 def read_lp_indices(indices: List[int]) -> List[str]:
-    return [provinces[indices[0]]] + [alphabets[indices[1]]] + [ads[idx] for idx in indices[2:]]
+    return [provinces[indices[0]], alphabets[indices[1]], "●"] + [ads[idx] for idx in indices[2:]]
 
 
 Coordinate = namedtuple('Coordinate', 'x y')
