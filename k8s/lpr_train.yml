@@ -30,7 +30,7 @@ spec:
           image: registry.datexis.com/tsteffek/licenseplatereconstructor:09fa24fea4124d930586a0dc802b2e427b48ba34
           command: [ "python" ]
           args: [ "bin/TrainLPR.py",
-                  "--ocr_path", "/var/lib/models/ranged-7-10/lightning_logs/version_29/checkpoints/epoch=64-step=18120.ckpt",
+                  "--ocr_path", "/var/lib/models/OCR/ranged-7-10/lightning_logs/version_8/checkpoints/epoch=3-step=1955.ckpt",
                   "--path", "/var/lib/images",
                   "--early_stopping",
                   "--max_epochs", "100",
@@ -42,6 +42,7 @@ spec:
                   "--precision", "16",
                   "--progress_bar_refresh_ratio", "0.1",
                   "--limit_val_batches", "0.1",
+                  "--auto_lr_find"
             #                  "--overfit_batches", "10",
             #                  "--accelerator", "ddp"
           ]

@@ -96,8 +96,9 @@ if __name__ == '__main__':
 
     if not args.no_train:
         tune_and_fit(trainer, model, datamodule, dict_args)
+        trainer.test()  # test best
     if not args.no_test:
-        trainer.test(model=model, datamodule=datamodule)
+        trainer.test(model=model, datamodule=datamodule)  # test latest
 
     log.info('Best model score: %s > %s', trainer.checkpoint_callback.best_model_score,
              trainer.checkpoint_callback.best_model_path)
