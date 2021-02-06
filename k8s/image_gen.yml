@@ -33,7 +33,7 @@ spec:
                   "--num_train", "25000",
                   "--num_test", "2500",
                   "--num_val", "2500",
-                  "--width", "1387",
+                  "--width", "1387",f
                   "--height", "445",
                   "--max_chars", "10",
                   "--min_chars", "7",

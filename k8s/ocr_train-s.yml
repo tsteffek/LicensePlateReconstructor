@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: ocr-images-pvc-ranged-7-10-s
+  name: ocr-images-pvc-ranged-7-10-restart
 spec:
   dataSource:
     name: ocr-images-pvc-ranged-7-10-m
@@ -17,7 +17,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: ocr-train-ranged-7-10
+  name: ocr-train-ranged-7-10-restart
 spec:
   template:
     metadata:
@@ -27,19 +27,20 @@ spec:
       restartPolicy: Never
       containers:
         - name: ocr
-          image: registry.datexis.com/tsteffek/licenseplatereconstructor:be11fdadd90a26196d5585309b798dd7e7723900
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:c6480dd1a24ca6fd17e2473acddc6a85e23e210d
           command: [ "python" ]
           args: [ "bin/TrainOCR.py",
+                  "--resume_from_checkpoint", "/var/lib/models/ranged-7-10/lightning_logs/version_29/checkpoints/epoch=64-step=18120.ckpt",
                   "--path", "/var/lib/images",
+                  "--no_train",
                   "--width_mult", "0.5",
                   "--early_stopping",
-                  "--max_epochs", "300",
-                  "--min_epochs", "150",
+                  "--max_epochs", "150",
+                  "--min_epochs", "75",
                   "--default_root_dir", "/var/lib/models/ranged-7-10",
                   "--batch_size", "1024",
-                  "--lr", "0.002754228703338169",
-            #                  "--lr_schedule", "cosine",
-            #                  "--lr_warm_up", "linear",
+                  "--lr", "0.005",
+                  "--lr_schedule", "cosine",
                   "--gpus", "-1",
                   "--precision", "16",
                   "--progress_bar_refresh_ratio", "0.1",
@@ -52,7 +53,7 @@ spec:
               memory: 150Gi
             limits:
               nvidia.com/gpu: 1
-              memory: 300Gi
+              memory: 250Gi
           volumeMounts:
             - name: ocr-images
               mountPath: /var/lib/images
@@ -66,7 +67,7 @@ spec:
             claimName: ocr-models-pvc
         - name: ocr-images
           persistentVolumeClaim:
-            claimName: ocr-images-pvc-ranged-7-10-s
+            claimName: ocr-images-pvc-ranged-7-10-restart
         - name: dshm
           emptyDir:
             medium: Memory

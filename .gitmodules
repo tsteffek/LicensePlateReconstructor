@@ -1,0 +1,3 @@
+[submodule "UGATIT-pytorch"]
+	path = UGATIT-pytorch
+	url = https://github.com/znxlwm/UGATIT-pytorch

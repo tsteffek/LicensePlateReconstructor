@@ -9,6 +9,7 @@ import torch
 from torch import Tensor
 from torch.utils.data import Dataset, DataLoader
 
+from base.data import ImageDataset
 from src.base.model import Vocabulary, Text
 
 
@@ -16,8 +17,8 @@ class ImagesDataModule(pl.LightningDataModule):
     def __init__(
             self,
             path: str,
-            chars: Iterable[str],
             batch_size: int,
+            chars: Iterable[str] = None,
             multi_core: bool = True,
             cuda: bool = torch.cuda.is_available(),
             shuffle: bool = True,
@@ -25,11 +26,12 @@ class ImagesDataModule(pl.LightningDataModule):
             image_file_glob: str = '**/*.jpg',
             noise: Iterable[str] = None,
             target_size: Union[float, Tuple[int, int]] = None,
+            vocab: Vocabulary = None,
             **kwargs
     ):
         super().__init__()
         self.path = path
-        self.vocab = Vocabulary(chars, noise)
+        self.vocab = vocab if vocab is not None else Vocabulary(chars, noise)
 
         self.image_file_glob = image_file_glob
 
@@ -53,7 +55,7 @@ class ImagesDataModule(pl.LightningDataModule):
         self.max_steps = None
 
     @abstractmethod
-    def _make_dataset(self, stage):
+    def _make_dataset(self, stage) -> ImageDataset:
         pass
 
     def setup(self, stage: Optional[str] = None):

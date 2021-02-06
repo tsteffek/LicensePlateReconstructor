@@ -1,7 +1,8 @@
 import argparse
 import logging
+from typing import Type
 
-from pytorch_lightning import Trainer
+from pytorch_lightning import Trainer, LightningModule
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor, EarlyStopping
 from pytorch_lightning.tuner.tuning import Tuner
 
@@ -9,6 +10,51 @@ from src.OCR.GeneratedImages import GeneratedImagesDataModule
 from src.OCR.architecture import CharacterRecognizer
 
 log = logging.getLogger('pytorch_lightning').getChild(__name__)
+
+
+def make_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser()
+    p.add_argument('--no_train', default=False, action='store_true')
+    p.add_argument('--no_test', default=False, action='store_true')
+    p.add_argument('--progress_bar_refresh_ratio', type=float)
+    p.add_argument('--early_stopping', default=False, action='store_true')
+    p = Trainer.add_argparse_args(p)
+    return p
+
+
+def load_or_create(model_cls: Type[LightningModule], dict_args, resume_path: str, *args):
+    if resume_path:
+        log.warning('Loading checkpoint from %s', resume_path)
+        return model_cls.load_from_checkpoint(resume_path)
+    else:
+        return model_cls(*args, **dict_args)
+
+
+def setup_trainer(args, max_steps) -> Trainer:
+    callbacks = [
+        ModelCheckpoint(
+            monitor='val_accuracy',
+            mode='max',
+            save_top_k=10,
+            save_last=True,
+            verbose=True
+        )
+    ]
+    if args.lr_schedule:
+        callbacks.append(LearningRateMonitor())
+    if args.early_stopping:
+        callbacks.append(EarlyStopping(
+            monitor='val_accuracy',
+            min_delta=0.00,
+            patience=5,
+            verbose=True,
+            mode='max'
+        ))
+
+    if args.progress_bar_refresh_ratio:
+        args.progress_bar_refresh_rate = int(max_steps * args.progress_bar_refresh_ratio)
+
+    return Trainer.from_argparse_args(args, callbacks=callbacks)
 
 
 def auto_scale_batch_size(trainer, model, datamodule, dict_args):
@@ -25,66 +71,33 @@ def auto_scale_batch_size(trainer, model, datamodule, dict_args):
     args.auto_scale_batch_size = False
 
 
+def tune_and_fit(trainer, model, datamodule, dict_args):
+    if dict_args['auto_scale_batch_size']:
+        auto_scale_batch_size(trainer=trainer, model=model, datamodule=datamodule, dict_args=dict_args)
+    trainer.tune(model=model, datamodule=datamodule)
+    trainer.fit(model=model, datamodule=datamodule)
+
+
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--no_train', default=False, action='store_true')
-    parser.add_argument('--no_test', default=False, action='store_true')
-    parser.add_argument('--progress_bar_refresh_ratio', type=float)
-    parser.add_argument('--early_stopping', default=False, action='store_true')
+    parser = make_parser()
     parser = CharacterRecognizer.add_model_specific_args(parser)
-    parser = Trainer.add_argparse_args(parser)
     parser = GeneratedImagesDataModule.add_argparse_args(parser)
 
     args = parser.parse_args()
-
     dict_args = vars(args)
+
     datamodule = GeneratedImagesDataModule(**dict_args)
     datamodule.setup()
 
-    max_iterations = datamodule.max_steps * args.max_epochs
+    model = load_or_create(CharacterRecognizer, dict_args, dict_args['resume_from_checkpoint'], datamodule.vocab,
+                           datamodule.size)
 
-    if args.resume_from_checkpoint:
-        log.warning('Loading checkpoint from %s', args.resume_from_checkpoint)
-        model = CharacterRecognizer.load_from_checkpoint(
-            args.resume_from_checkpoint, vocab=datamodule.vocab, img_size=datamodule.size,
-            max_iterations=max_iterations, **dict_args
-        )
-    else:
-        model = CharacterRecognizer(
-            vocab=datamodule.vocab, img_size=datamodule.size, max_iterations=max_iterations,
-            **dict_args
-        )
+    trainer = setup_trainer(args, datamodule.max_steps)
 
-    trainer_callbacks = [
-        ModelCheckpoint(
-            monitor='val_accuracy',
-            mode='max',
-            save_top_k=10,
-            save_last=True,
-            verbose=True
-        )
-    ]
-    if args.lr_schedule:
-        trainer_callbacks.append(LearningRateMonitor())
-    if args.early_stopping:
-        trainer_callbacks.append(EarlyStopping(
-            monitor='val_accuracy',
-            min_delta=0.00,
-            patience=5,
-            verbose=True,
-            mode='max'
-        ))
-
-    if args.progress_bar_refresh_ratio:
-        args.progress_bar_refresh_rate = int(datamodule.max_steps * args.progress_bar_refresh_ratio)
-
-    trainer = Trainer.from_argparse_args(args, callbacks=trainer_callbacks)
     if not args.no_train:
-        if args.auto_scale_batch_size:
-            auto_scale_batch_size(trainer=trainer, model=model, datamodule=datamodule, dict_args=dict_args)
-        trainer.tune(model=model, datamodule=datamodule)
-        trainer.fit(model=model, datamodule=datamodule)
+        tune_and_fit(trainer, model, datamodule, dict_args)
     if not args.no_test:
         trainer.test(model=model, datamodule=datamodule)
 
-    log.info('Best model score: %s > %s', trainer_callbacks[0].best_model_score, trainer_callbacks[0].best_model_path)
+    log.info('Best model score: %s > %s', trainer.checkpoint_callback.best_model_score,
+             trainer.checkpoint_callback.best_model_path)

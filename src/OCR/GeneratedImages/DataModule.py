@@ -23,7 +23,7 @@ class GeneratedImagesDataModule(ImagesDataModule):
             **kwargs
     ):
         chars, self.languages, noise = IO.load_languages_file(path, language_file)
-        super().__init__(path, chars, batch_size, multi_core, cuda, shuffle, precision, image_file_glob, noise,
+        super().__init__(path, batch_size, chars, multi_core, cuda, shuffle, precision, image_file_glob, noise,
                          target_size, **kwargs)
 
     def _make_dataset(self, stage):
