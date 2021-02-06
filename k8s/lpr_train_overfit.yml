@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: lpr-images-pvc
+  name: lpr-images-pvc-overfit
 spec:
   dataSource:
     name: lpr-images-pvc
@@ -17,7 +17,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: lpr-train
+  name: lpr-train-overfit
 spec:
   template:
     metadata:
@@ -35,15 +35,14 @@ spec:
                   "--early_stopping",
                   "--max_epochs", "100",
                   "--min_epochs", "20",
-                  "--default_root_dir", "/var/lib/models/lpr/default",
+                  "--default_root_dir", "/var/lib/models/lpr/overfit",
                   "--batch_size", "512",
                   "--lr", "0.0001",
                   "--gpus", "-1",
                   "--precision", "16",
                   "--progress_bar_refresh_ratio", "0.1",
             #                  "--auto_lr_find", "True",
-                  "--limit_val_batches", "0.1",
-            #                  "--overfit_batches", "10",
+                  "--overfit_batches", "10",
             #                  "--accelerator", "ddp"
           ]
           resources:
@@ -66,7 +65,7 @@ spec:
             claimName: ocr-models-pvc
         - name: lpr-images
           persistentVolumeClaim:
-            claimName: lpr-images-pvc
+            claimName: lpr-images-pvc-overfit
         - name: dshm
           emptyDir:
             medium: Memory

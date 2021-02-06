@@ -1,5 +1,4 @@
 import logging
-import math
 from argparse import ArgumentParser
 from typing import Tuple, List
 
@@ -10,7 +9,7 @@ from PIL.Image import Image
 from torch import Tensor, optim, nn
 
 from src.OCR.architecture import CharacterRecognizer
-from .networks import ResnetGenerator, RhoClipper
+from .PI_REC import G_Generator
 
 log = logging.getLogger('pytorch_lightning').getChild(__name__)
 
@@ -21,7 +20,7 @@ class Reconstructor(pl.LightningModule):
             base_channel_number: int = 64, res_blocks: int = 6, light: bool = False,
             log_images_per_epoch: int = 3,
             lr: float = 1e-4, lr_schedule: str = None, lr_warm_up: str = None,
-            ctc_reduction: str = 'mean',
+            ctc_reduction: str = 'mean', mode: str = 'PI-REC',
             **kwargs
     ):
         super().__init__()
@@ -33,12 +32,16 @@ class Reconstructor(pl.LightningModule):
         ocr.log = self.log
         self.ocr = ocr
 
-        self.model = ResnetGenerator(
-            input_nc=3, output_nc=3,
-            ngf=base_channel_number, n_blocks=res_blocks,
-            img_size=int(math.sqrt(math.prod(ocr.input_size))), light=light
-        )
-        self.Rho_clipper = RhoClipper(0, 1)
+        self.mode = mode
+        # if mode == 'PI-REC':
+        self.model = G_Generator(rs_blocks=res_blocks)
+        # else:
+        #     self.model = ResnetGenerator(
+        #         input_nc=3, output_nc=3,
+        #         ngf=base_channel_number, n_blocks=res_blocks,
+        #         img_size=int(math.sqrt(math.prod(ocr.input_size))), light=light
+        #     )
+        #     self.Rho_clipper = RhoClipper(0, 1)
 
         self.forward = self.model.forward
 
@@ -81,7 +84,10 @@ class Reconstructor(pl.LightningModule):
             self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]]
     ) -> Tuple[Tuple[Tensor, Tensor, Tensor], Tuple[Tensor, Tensor]]:
         x, y = batch
-        x_hat, cam_logits, heatmap = self.forward(x)
+        # if self.mode == 'PI-REC':
+        x_hat = self.forward(x)
+        # else:
+        #     x_hat, cam_logits, heatmap = self.forward(x)
         return x_hat, self.ocr.step((x_hat, y))
 
     def training_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int) -> Tensor:
