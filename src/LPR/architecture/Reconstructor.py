@@ -147,13 +147,14 @@ class Reconstructor(pl.LightningModule):
 
     def validation_epoch_end(self, outputs: List[Tuple[Tensor, Tensor]]) -> None:
         self.log_epoch('val', outputs)
-        if self.current_epoch == 0:
+        if self.use_template and self.current_epoch == 0:
             self.logger.experiment.add_image('template', self.template)
 
     def test_epoch_end(self, outputs: List[Tuple[Tensor, Tensor]]) -> None:
         self.log_epoch('test', outputs)
-        self.logger.experiment.add_image('template/test', self.template)
-        log.info('Lam: %s', self.lam)
+        if self.use_template:
+            self.logger.experiment.add_image('template/test', self.template)
+            log.info('Lam: %s', self.lam)
 
     def log_epoch(self, stage: str, outputs: List[Tuple[Tensor, Tensor]]):
         lpr_output, ocr_output = list(zip(*outputs))
