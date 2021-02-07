@@ -57,7 +57,7 @@ class Reconstructor(pl.LightningModule):
             self.loss_func = MSELoss()
             log.info(f'Using template: {template_path}')
 
-        self.log_results = log_per_epoch
+        self.log_per_epoch = log_per_epoch
 
         self.lr = lr
         self.lr_schedule = lr_schedule
@@ -74,6 +74,7 @@ class Reconstructor(pl.LightningModule):
         parser.add_argument('--use_template', action='store_true', default=False, help='Activate auxiliary loss')
         parser.add_argument('--template_path', type=str, default='templates/template.jpg')
         parser.add_argument('--lam', type=float, default=0.2, help='Auxiliary loss weighting')
+        parser.add_argument('--log_per_epoch', type=int, default=3, help='How many predictions to log')
         parser.add_argument('--lr', type=float, default=1e-4)
         parser.add_argument('--lr_schedule', type=str, default=None, choices=['cosine', None])
         parser.add_argument('--lr_warm_up', type=str, default=None, choices=['linear', 'exponential', None])
@@ -138,11 +139,11 @@ class Reconstructor(pl.LightningModule):
 
     def validation_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int
                         ) -> Tuple[Tensor, Tuple[Tensor, Tensor, str]]:
-        return self.step_with_logging('val', batch, batch_idx < self.log_results)
+        return self.step_with_logging('val', batch, batch_idx < self.log_per_epoch)
 
     def test_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int
                   ) -> Tuple[Tensor, Tuple[Tensor, Tensor, str]]:
-        return self.step_with_logging('test', batch, batch_idx < self.log_results)
+        return self.step_with_logging('test', batch, batch_idx < self.log_per_epoch)
 
     def validation_epoch_end(self, outputs: List[Tuple[Tensor, Tensor]]) -> None:
         self.log_epoch('val', outputs)

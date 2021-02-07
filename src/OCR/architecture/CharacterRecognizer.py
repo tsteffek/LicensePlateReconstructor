@@ -56,7 +56,7 @@ class CharacterRecognizer(pl.LightningModule):
         self.lr_schedule = lr_schedule
         self.lr_warm_up = lr_warm_up
 
-        self.log_results = log_per_epoch
+        self.log_per_epoch = log_per_epoch
         self.accuracy_cha = pl.metrics.Accuracy(compute_on_step=False)
         self.accuracy_len = pl.metrics.Accuracy(compute_on_step=False)
         self.confusion_matrix = ConfusionMatrix(self.vocab.noisy_chars)
@@ -70,6 +70,7 @@ class CharacterRecognizer(pl.LightningModule):
         parser.add_argument('--first_filter_shape', type=int, nargs='+', default=3)
         parser.add_argument('--first_filter_stride', type=int, nargs='+', default=2)
         parser.add_argument('--lstm_hidden', type=int, default=48)
+        parser.add_argument('--log_per_epoch', type=int, default=3, help='How many predictions to log')
         parser.add_argument('--lr', type=float, default=1e-4)
         parser.add_argument('--lr_schedule', type=str, default=None, choices=['cosine', None])
         parser.add_argument('--lr_warm_up', type=str, default=None, choices=['linear', 'exponential', None])
@@ -124,10 +125,10 @@ class CharacterRecognizer(pl.LightningModule):
 
     def validation_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int) -> Tuple[
         Tensor, Tensor, str]:
-        return self.step_with_logging('val', batch, batch_idx < self.log_results)
+        return self.step_with_logging('val', batch, batch_idx < self.log_per_epoch)
 
     def test_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int) -> Tuple[Tensor, Tensor, str]:
-        return self.step_with_logging('test', batch, batch_idx < self.log_results)
+        return self.step_with_logging('test', batch, batch_idx < self.log_per_epoch)
 
     def update_metrics(self, decoded: List[Tensor], batch: Tuple[Tensor, Tuple[Tensor, Tensor]]):
         predictions, pred_lengths = self.cat(decoded)

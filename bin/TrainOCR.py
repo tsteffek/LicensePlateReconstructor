@@ -54,6 +54,12 @@ def setup_trainer(args, max_steps) -> Trainer:
     if args.progress_bar_refresh_ratio:
         args.progress_bar_refresh_rate = int(max_steps * args.progress_bar_refresh_ratio)
 
+    if args.log_per_epoch and args.num_sanity_val_steps:
+        args.num_sanity_val_steps = args.log_per_epoch if args.log_per_epoch > args.num_sanity_val_steps \
+            else args.num_sanity_val_steps
+    elif args.log_per_epoch:
+        args.num_sanity_val_steps = args.log_per_epoch
+
     return Trainer.from_argparse_args(args, callbacks=callbacks)
 
 
