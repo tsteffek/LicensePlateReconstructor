@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: lpr-images-pvc-lr-find
+  name: lpr-images-pvc-template
 spec:
   dataSource:
     name: lpr-images-pvc
@@ -17,7 +17,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: lpr-train-lr-find
+  name: lpr-train-template
 spec:
   template:
     metadata:
@@ -27,22 +27,26 @@ spec:
       restartPolicy: Never
       containers:
         - name: lpr
-          image: registry.datexis.com/tsteffek/licenseplatereconstructor:09fa24fea4124d930586a0dc802b2e427b48ba34
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:6f4d83cef5d2f6f0074e01334c1bfb48f1c55302
           command: [ "python" ]
           args: [ "bin/TrainLPR.py",
-                  "--ocr_path", "/var/lib/models/OCR/ranged-7-10/lightning_logs/version_8/checkpoints/epoch=3-step=1955.ckpt",
+                  "--ocr_path", "/var/lib/models/OCR/ranged-7-10/lightning_logs/version_9/checkpoints/epoch=6-step=3422.ckpt",
                   "--path", "/var/lib/images",
                   "--early_stopping",
                   "--max_epochs", "100",
                   "--min_epochs", "20",
                   "--default_root_dir", "/var/lib/models/lpr/default",
-                  "--batch_size", "512",
+                  "--batch_size", "480",
                   "--lr", "0.0001",
                   "--gpus", "-1",
                   "--precision", "16",
                   "--progress_bar_refresh_ratio", "0.1",
                   "--limit_val_batches", "0.1",
-                  "--auto_lr_find"
+                  "--use_template",
+                  "--lam", "0.2",
+                  "--template_path", "templates/template.jpg"
+            #                              "--template_path", "templates/template_trans.jpg"
+            #                  "--auto_lr_find" # 0.002754228703338169
             #                  "--overfit_batches", "10",
             #                  "--accelerator", "ddp"
           ]
@@ -66,7 +70,7 @@ spec:
             claimName: ocr-models-pvc
         - name: lpr-images
           persistentVolumeClaim:
-            claimName: lpr-images-pvc-lr-find
+            claimName: lpr-images-pvc-template
         - name: dshm
           emptyDir:
             medium: Memory

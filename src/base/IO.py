@@ -4,7 +4,7 @@ import logging
 import os
 from os import path
 from pathlib import Path
-from typing import List, Any, Tuple
+from typing import List, Any, Tuple, Union
 
 from PIL import Image
 
@@ -12,14 +12,20 @@ from src.OCR.image_gen.model.Language import Language
 
 log = logging.getLogger(__name__)
 
-DATA_PATH = Path(os.getcwd()) / 'img_gen_config'
-try:
-    move_upwards = ''
-    while not DATA_PATH.exists():
-        move_upwards += '../'
-        DATA_PATH = Path(move_upwards) / 'img_gen_config'
-except OSError:
-    raise IOError('img_gen_config folder not found')
+
+def locate_data_directory(data_dir_name='res'):
+    data_path = Path(os.getcwd()) / data_dir_name
+    try:
+        move_upwards = ''
+        while not data_path.exists():
+            move_upwards += '../'
+            data_path = Path(move_upwards) / data_dir_name
+        return data_path
+    except OSError:
+        raise IOError(f'{data_dir_name} folder not found')
+
+
+DATA_PATH = locate_data_directory()
 
 
 def create_path(*paths) -> Path:
@@ -37,7 +43,7 @@ def read_json(file_name: str, data_path: Path = DATA_PATH) -> Any:
         return json.load(file)
 
 
-def read_languages(data_path: str = DATA_PATH):
+def read_languages(data_path: Union[str, Path] = DATA_PATH / 'img_gen_config'):
     languages = find_language_names(data_path)
     log.info(f'Detected {len(languages)} languages in {data_path}: {languages}')
     fonts = {lang: read_font_paths(data_path, lang) for lang in languages}
@@ -72,3 +78,7 @@ def read_chars(data_path: str, language: str):
 
 def load_image(image_path: str) -> Image:
     return Image.open(image_path)
+
+
+def load_resource_image(image_path: str) -> Image:
+    return load_image(DATA_PATH / image_path)

@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: ocr-images-pvc-ranged-7-10-lr-cos
+  name: ocr-images-pvc-ranged-7-10-lr-test
 spec:
   dataSource:
     name: ocr-images-pvc-ranged-7-10-small
@@ -17,7 +17,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: ocr-train-ranged-7-10-lr-cos
+  name: ocr-train-ranged-7-10-lr-test
 spec:
   template:
     metadata:
@@ -27,11 +27,12 @@ spec:
       restartPolicy: Never
       containers:
         - name: ocr
-          image: registry.datexis.com/tsteffek/licenseplatereconstructor:8a004923ae7c6362879f17b9d2bc389c75c489bd
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:1f9407be8045128a020b5f05fbbb5ab74705ec53
           command: [ "python" ]
           args: [ "bin/TrainOCR.py",
+                  "--resume_from_checkpoint", "/var/lib/models/OCR/ranged-7-10/lightning_logs/version_9/checkpoints/epoch=6-step=3422.ckpt",
                   "--path", "/var/lib/images",
-            #                  "--no_train",
+                  "--no_train",
                   "--width_mult", "0.5",
                   "--early_stopping",
                   "--max_epochs", "150",
@@ -44,7 +45,7 @@ spec:
                   "--gpus", "-1",
                   "--precision", "16",
                   "--progress_bar_refresh_ratio", "0.1",
-                  "--auto_lr_find", "True" # for 1024: 0.002754228703338169
+            #                  "--auto_lr_find", "True" # for 1024: 0.002754228703338169 | for 512:  0.0022908676527677745
             #                  "--accelerator", "ddp"
           ]
           resources:
@@ -67,7 +68,7 @@ spec:
             claimName: ocr-models-pvc
         - name: ocr-images
           persistentVolumeClaim:
-            claimName: ocr-images-pvc-ranged-7-10-lr-cos
+            claimName: ocr-images-pvc-ranged-7-10-lr-test
         - name: dshm
           emptyDir:
             medium: Memory

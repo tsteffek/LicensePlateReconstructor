@@ -11,7 +11,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: ocr
-          image: registry.datexis.com/tsteffek/licenseplatereconstructor:bdd3d6483c989c47778cbe484ef9ed885bc832ed
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:1f9407be8045128a020b5f05fbbb5ab74705ec53
           command: [ "python" ]
           args: [ "bin/TrainOCR.py",
                   "--path", "/var/lib/images",

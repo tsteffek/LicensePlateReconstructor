@@ -50,6 +50,7 @@ class CharacterRecognizer(pl.LightningModule):
         self.conv_output_size = torch.tensor(w, dtype=torch.int64)
 
         self.loss_func = nn.CTCLoss(reduction=ctc_reduction, zero_infinity=True)
+        self.softmax = nn.LogSoftmax(dim=-1)
 
         self.lr = lr
         self.lr_schedule = lr_schedule
@@ -89,12 +90,12 @@ class CharacterRecognizer(pl.LightningModule):
     def loss(
             self, output: Tensor, targets: Tensor, input_lengths: Tensor, target_lengths: Tensor
     ) -> Tuple[Tensor, Tensor]:
-        logits = nn.functional.log_softmax(output, dim=-1)
-        return logits, self.loss_func(logits, targets, input_lengths, target_lengths)
+        logits = self.softmax(output)
+        return self.loss_func(logits, targets, input_lengths, target_lengths), logits
 
     def predict(self, x: Tensor) -> List[str]:
         output = self.forward(x)
-        logits = nn.functional.log_softmax(output, dim=-1)
+        logits = self.softmax.log_softmax(output)
         texts = self.decode_raw(logits.transpose(0, 1))
         return [self.vocab.decode_text(text) for text in texts]
 
@@ -107,8 +108,8 @@ class CharacterRecognizer(pl.LightningModule):
     def step_with_logging(
             self, stage: str, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], return_probe: bool
     ) -> Tuple[Tensor, Tensor, str]:
-        logits, loss = self.step(batch)
-        self.log(f'{stage}_loss', loss, on_epoch=True, sync_dist=True)
+        loss, logits = self.step(batch)
+        self.log(f'loss/{stage}', loss, on_epoch=True, sync_dist=True)
 
         decoded = self.decode_raw(logits)
         self.update_metrics(decoded, batch)
@@ -117,8 +118,8 @@ class CharacterRecognizer(pl.LightningModule):
             return decoded[0], batch[0][0], batch[1][0][0]
 
     def training_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int) -> Tensor:
-        loss = self.step(batch)[1]
-        self.log('train_loss', loss, on_step=True, on_epoch=True)
+        loss = self.step(batch)[0]
+        self.log('loss/train', loss, on_step=True, on_epoch=True)
         return loss
 
     def validation_step(self, batch: Tuple[Tensor, Tuple[Tensor, Tensor]], batch_idx: int) -> Tuple[
@@ -163,17 +164,17 @@ class CharacterRecognizer(pl.LightningModule):
     def log_epoch(self, stage: str, outputs: List[Tuple[Tensor, Tensor, str]]):
         acc_len = self.accuracy_len.compute()
         acc_cha = self.accuracy_cha.compute()
-        self.log(f'{stage}_acc_len_epoch', acc_len, sync_dist=True)
-        self.log(f'{stage}_acc_cha_epoch', acc_cha, sync_dist=True)
-        self.log(f'{stage}_accuracy', acc_len * acc_cha, sync_dist=True)
+        self.log(f'accuracy/{stage}/length', acc_len, sync_dist=True)
+        self.log(f'accuracy/{stage}/char', acc_cha, sync_dist=True)
+        self.log(f'accuracy/{stage}', acc_len * acc_cha, sync_dist=True)
         log.info(self.confusion_matrix_len.compute())
         log.info(self.confusion_matrix.compute())
 
         predictions = [f'"{self.vocab.decode_text(output[0])}" is actually "{output[2]}"' for output in outputs]
         original_images = torch.stack([output[1] for output in outputs])
 
-        self.logger.experiment.add_images(f'{stage}_orig', original_images, self.global_step)
-        self.logger.experiment.add_text(f'{stage}_pred', '<br/>'.join(predictions), self.global_step)
+        self.logger.experiment.add_images(f'{stage}/orig', original_images, self.global_step)
+        self.logger.experiment.add_text(f'{stage}/pred', '<br/>'.join(predictions), self.global_step)
 
     def configure_optimizers(self):
         if self.lr_schedule is None:

@@ -33,7 +33,7 @@ def load_or_create(model_cls: Type[LightningModule], dict_args, resume_path: str
 def setup_trainer(args, max_steps) -> Trainer:
     callbacks = [
         ModelCheckpoint(
-            monitor='val_accuracy',
+            monitor='accuracy/val',
             mode='max',
             save_top_k=10,
             save_last=True,
@@ -44,7 +44,7 @@ def setup_trainer(args, max_steps) -> Trainer:
         callbacks.append(LearningRateMonitor())
     if args.early_stopping:
         callbacks.append(EarlyStopping(
-            monitor='val_accuracy',
+            monitor='accuracy/val',
             min_delta=0.00,
             patience=5,
             verbose=True,
