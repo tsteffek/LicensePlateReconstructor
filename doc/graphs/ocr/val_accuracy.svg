@@ -1,0 +1,245 @@
+<svg viewBox="0 0 330 200" xmlns="http://www.w3.org/2000/svg">
+    <g>
+        <g>
+            <g>
+                <g>
+                    <g>
+                        <line x1="51.5625" y1="178" x2="46.5625" y2="178" style="visibility: inherit;"
+                              fill="rgb(0, 0, 0)" stroke="rgb(204, 204, 204)" stroke-width="1px"></line>
+                        <line x1="51.5625" y1="158.2222222222222" x2="46.5625" y2="158.2222222222222"
+                              style="visibility: inherit;" fill="rgb(0, 0, 0)" stroke="rgb(204, 204, 204)"
+                              stroke-width="1px"></line>
+                        <line x1="51.5625" y1="138.44444444444446" x2="46.5625" y2="138.44444444444446"
+                              style="visibility: inherit;" fill="rgb(0, 0, 0)" stroke="rgb(204, 204, 204)"
+                              stroke-width="1px"></line>
+                        <line x1="51.5625" y1="118.66666666666669" x2="46.5625" y2="118.66666666666669"
+                              style="visibility: inherit;" fill="rgb(0, 0, 0)" stroke="rgb(204, 204, 204)"
+                              stroke-width="1px"></line>
+                        <line x1="51.5625" y1="98.88888888888887" x2="46.5625" y2="98.88888888888887"
+                              style="visibility: inherit;" fill="rgb(0, 0, 0)" stroke="rgb(204, 204, 204)"
+                              stroke-width="1px"></line>
+                        <line x1="51.5625" y1="79.11111111111113" x2="46.5625" y2="79.11111111111113"
+                              style="visibility: inherit;" fill="rgb(0, 0, 0)" stroke="rgb(204, 204, 204)"
+                              stroke-width="1px"></line>
+                        <line x1="51.5625" y1="59.33333333333334" x2="46.5625" y2="59.33333333333334"
+                              style="visibility: inherit;" fill="rgb(0, 0, 0)" stroke="rgb(204, 204, 204)"
+                              stroke-width="1px"></line>
+                        <line x1="51.5625" y1="39.55555555555559" x2="46.5625" y2="39.55555555555559"
+                              style="visibility: inherit;" fill="rgb(0, 0, 0)" stroke="rgb(204, 204, 204)"
+                              stroke-width="1px"></line>
+                        <line x1="51.5625" y1="19.777777777777786" x2="46.5625" y2="19.777777777777786"
+                              style="visibility: inherit;" fill="rgb(0, 0, 0)" stroke="rgb(204, 204, 204)"
+                              stroke-width="1px"></line>
+                        <line x1="51.5625" y1="0" x2="46.5625" y2="0" style="visibility: inherit;" fill="rgb(0, 0, 0)"
+                              stroke="rgb(204, 204, 204)" stroke-width="1px"></line>
+                    </g>
+                    <g transform="translate(41.5625, 0)">
+                        <text x="0" y="178" dx="0em" dy="0.3em"
+                              style="text-anchor: end; visibility: hidden; font-family: Roboto, sans-serif; font-size: 12px; font-weight: 200;"
+                              fill="rgb(50, 49, 63)" stroke="none" stroke-width="1px">0.6
+                        </text>
+                        <text x="0" y="158.2222222222222" dx="0em" dy="0.3em"
+                              style="text-anchor: end; visibility: inherit; font-family: Roboto, sans-serif; font-size: 12px; font-weight: 200;"
+                              fill="rgb(50, 49, 63)" stroke="none" stroke-width="1px">0.65
+                        </text>
+                        <text x="0" y="138.44444444444446" dx="0em" dy="0.3em"
+                              style="text-anchor: end; visibility: hidden; font-family: Roboto, sans-serif; font-size: 12px; font-weight: 200;"
+                              fill="rgb(50, 49, 63)" stroke="none" stroke-width="1px">0.7
+                        </text>
+                        <text x="0" y="118.66666666666669" dx="0em" dy="0.3em"
+                              style="text-anchor: end; visibility: inherit; font-family: Roboto, sans-serif; font-size: 12px; font-weight: 200;"
+                              fill="rgb(50, 49, 63)" stroke="none" stroke-width="1px">0.75
+                        </text>
+                        <text x="0" y="98.88888888888887" dx="0em" dy="0.3em"
+                              style="text-anchor: end; visibility: hidden; font-family: Roboto, sans-serif; font-size: 12px; font-weight: 200;"
+                              fill="rgb(50, 49, 63)" stroke="none" stroke-width="1px">0.8
+                        </text>
+                        <text x="0" y="79.11111111111113" dx="0em" dy="0.3em"
+                              style="text-anchor: end; visibility: inherit; font-family: Roboto, sans-serif; font-size: 12px; font-weight: 200;"
+                              fill="rgb(50, 49, 63)" stroke="none" stroke-width="1px">0.85
+                        </text>
+                        <text x="0" y="59.33333333333334" dx="0em" dy="0.3em"
+                              style="text-anchor: end; visibility: hidden; font-family: Roboto, sans-serif; font-size: 12px; font-weight: 200;"
+                              fill="rgb(50, 49, 63)" stroke="none" stroke-width="1px">0.9
+                        </text>
+                        <text x="0" y="39.55555555555559" dx="0em" dy="0.3em"
+                              style="text-anchor: end; visibility: inherit; font-family: Roboto, sans-serif; font-size: 12px; font-weight: 200;"
+                              fill="rgb(50, 49, 63)" stroke="none" stroke-width="1px">0.95
+                        </text>
+                        <text x="0" y="19.777777777777786" dx="0em" dy="0.3em"
+                              style="text-anchor: end; visibility: hidden; font-family: Roboto, sans-serif; font-size: 12px; font-weight: 200;"
+                              fill="rgb(50, 49, 63)" stroke="none" stroke-width="1px">1
+                        </text>
+                        <text x="0" y="0" dx="0em" dy="0.3em"
+                              style="text-anchor: end; visibility: hidden; font-family: Roboto, sans-serif; font-size: 12px; font-weight: 200;"
+                              fill="rgb(50, 49, 63)" stroke="none" stroke-width="1px">1.05
+                        </text>
+                    </g>
+                    <line x1="51.5625" y1="0" x2="51.5625" y2="178" fill="rgb(0, 0, 0)" stroke="rgb(204, 204, 204)"
+                          stroke-width="1px"></line>
+                </g>
+            </g>
+            <g transform="translate(51, 0)" clip-path="url(#clip_0)">
+                <clipPath id="clip_0">
+                    <rect width="278" height="178"></rect>
+                </clipPath>
+                <g>
+                    <g>
+                        <g>
+                            <line x1="0" y1="0" x2="0" y2="178" fill="rgb(0, 0, 0)" stroke="rgb(60, 60, 60)"
+                                  stroke-width="1px" opacity="0.25"></line>
+                            <line x1="30.9375" y1="0" x2="30.9375" y2="178" fill="rgb(0, 0, 0)" stroke="rgb(60, 60, 60)"
+                                  stroke-width="1px" opacity="0.25"></line>
+                            <line x1="61.875" y1="0" x2="61.875" y2="178" fill="rgb(0, 0, 0)" stroke="rgb(60, 60, 60)"
+                                  stroke-width="1px" opacity="0.25"></line>
+                            <line x1="92.8125" y1="0" x2="92.8125" y2="178" fill="rgb(0, 0, 0)" stroke="rgb(60, 60, 60)"
+                                  stroke-width="1px" opacity="0.25"></line>
+                            <line x1="123.75" y1="0" x2="123.75" y2="178" fill="rgb(0, 0, 0)" stroke="rgb(60, 60, 60)"
+                                  stroke-width="1px" opacity="0.25"></line>
+                            <line x1="154.6875" y1="0" x2="154.6875" y2="178" fill="rgb(0, 0, 0)"
+                                  stroke="rgb(60, 60, 60)" stroke-width="1px" opacity="0.25"></line>
+                            <line x1="185.625" y1="0" x2="185.625" y2="178" fill="rgb(0, 0, 0)" stroke="rgb(60, 60, 60)"
+                                  stroke-width="1px" opacity="0.25"></line>
+                            <line x1="216.5625" y1="0" x2="216.5625" y2="178" fill="rgb(0, 0, 0)"
+                                  stroke="rgb(60, 60, 60)" stroke-width="1px" opacity="0.25"></line>
+                            <line x1="247.5" y1="0" x2="247.5" y2="178" fill="rgb(0, 0, 0)" stroke="rgb(60, 60, 60)"
+                                  stroke-width="1px" opacity="0.25"></line>
+                            <line x1="278.4375" y1="0" x2="278.4375" y2="178" fill="rgb(0, 0, 0)"
+                                  stroke="rgb(60, 60, 60)" stroke-width="1px" opacity="0.25"></line>
+                        </g>
+                        <g>
+                            <line x1="0" y1="178" x2="278.4375" y2="178" fill="rgb(0, 0, 0)" stroke="rgb(60, 60, 60)"
+                                  stroke-width="1px" opacity="0.25"></line>
+                            <line x1="0" y1="158.2222222222222" x2="278.4375" y2="158.2222222222222" fill="rgb(0, 0, 0)"
+                                  stroke="rgb(60, 60, 60)" stroke-width="1px" opacity="0.25"></line>
+                            <line x1="0" y1="138.44444444444446" x2="278.4375" y2="138.44444444444446"
+                                  fill="rgb(0, 0, 0)" stroke="rgb(60, 60, 60)" stroke-width="1px" opacity="0.25"></line>
+                            <line x1="0" y1="118.66666666666669" x2="278.4375" y2="118.66666666666669"
+                                  fill="rgb(0, 0, 0)" stroke="rgb(60, 60, 60)" stroke-width="1px" opacity="0.25"></line>
+                            <line x1="0" y1="98.88888888888887" x2="278.4375" y2="98.88888888888887" fill="rgb(0, 0, 0)"
+                                  stroke="rgb(60, 60, 60)" stroke-width="1px" opacity="0.25"></line>
+                            <line x1="0" y1="79.11111111111113" x2="278.4375" y2="79.11111111111113" fill="rgb(0, 0, 0)"
+                                  stroke="rgb(60, 60, 60)" stroke-width="1px" opacity="0.25"></line>
+                            <line x1="0" y1="59.33333333333334" x2="278.4375" y2="59.33333333333334" fill="rgb(0, 0, 0)"
+                                  stroke="rgb(60, 60, 60)" stroke-width="1px" opacity="0.25"></line>
+                            <line x1="0" y1="39.55555555555559" x2="278.4375" y2="39.55555555555559" fill="rgb(0, 0, 0)"
+                                  stroke="rgb(60, 60, 60)" stroke-width="1px" opacity="0.25"></line>
+                            <line x1="0" y1="19.777777777777786" x2="278.4375" y2="19.777777777777786"
+                                  fill="rgb(0, 0, 0)" stroke="rgb(60, 60, 60)" stroke-width="1px" opacity="0.25"></line>
+                            <line x1="0" y1="0" x2="278.4375" y2="0" fill="rgb(0, 0, 0)" stroke="rgb(60, 60, 60)"
+                                  stroke-width="1px" opacity="0.25"></line>
+                        </g>
+                    </g>
+                </g>
+                <g>
+                    <g>
+                        <line x1="0" y1="415.33333333333326" x2="278.4375" y2="415.33333333333326" fill="rgb(0, 0, 0)"
+                              stroke="rgb(153, 153, 153)" stroke-width="1.5px"></line>
+                    </g>
+                </g>
+                <g>
+                    <g>
+                        <line x1="0" y1="0" x2="0" y2="178" fill="rgb(0, 0, 0)" stroke="rgb(153, 153, 153)"
+                              stroke-width="1.5px"></line>
+                    </g>
+                </g>
+                <g>
+                    <g>
+                        <g>
+                            <g>
+                                <g>
+                                    <path stroke="rgb(204, 51, 17)" stroke-width="2px"
+                                          d="M90.70875,53.084272596571196L120.965625,99.57601075702244L151.2225,31.818265967898903L181.479375,30.825629287295875L211.73625,28.797469456990566L241.993125,37.361913839976005L272.25,29.961369090610084"
+                                          style="fill: none;" fill="none"></path>
+                                </g>
+                                <g>
+                                    <path stroke="rgb(238, 51, 119)" stroke-width="2px"
+                                          d="M90.70875,77.51579104529488L120.965625,38.74168401294285L151.2225,35.716973728603804"
+                                          style="fill: none;" fill="none"></path>
+                                </g>
+                                <g>
+                                    <path stroke="rgb(255, 112, 67)" stroke-width="2px"
+                                          d="M30.195,146.0138284365336L60.451875,102.32991621229384" style="fill: none;"
+                                          fill="none"></path>
+                                </g>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+            </g>
+            <g transform="translate(51, 178)" clip-path="url(#clip_1)">
+                <clipPath id="clip_1">
+                    <rect width="278" height="22"></rect>
+                </clipPath>
+                <g>
+                    <g>
+                        <line x1="0" y1="0" x2="0" y2="5" style="visibility: inherit;" fill="rgb(0, 0, 0)"
+                              stroke="rgb(204, 204, 204)" stroke-width="1px"></line>
+                        <line x1="30.9375" y1="0" x2="30.9375" y2="5" style="visibility: inherit;" fill="rgb(0, 0, 0)"
+                              stroke="rgb(204, 204, 204)" stroke-width="1px"></line>
+                        <line x1="61.875" y1="0" x2="61.875" y2="5" style="visibility: inherit;" fill="rgb(0, 0, 0)"
+                              stroke="rgb(204, 204, 204)" stroke-width="1px"></line>
+                        <line x1="92.8125" y1="0" x2="92.8125" y2="5" style="visibility: inherit;" fill="rgb(0, 0, 0)"
+                              stroke="rgb(204, 204, 204)" stroke-width="1px"></line>
+                        <line x1="123.75" y1="0" x2="123.75" y2="5" style="visibility: inherit;" fill="rgb(0, 0, 0)"
+                              stroke="rgb(204, 204, 204)" stroke-width="1px"></line>
+                        <line x1="154.6875" y1="0" x2="154.6875" y2="5" style="visibility: inherit;" fill="rgb(0, 0, 0)"
+                              stroke="rgb(204, 204, 204)" stroke-width="1px"></line>
+                        <line x1="185.625" y1="0" x2="185.625" y2="5" style="visibility: inherit;" fill="rgb(0, 0, 0)"
+                              stroke="rgb(204, 204, 204)" stroke-width="1px"></line>
+                        <line x1="216.5625" y1="0" x2="216.5625" y2="5" style="visibility: inherit;" fill="rgb(0, 0, 0)"
+                              stroke="rgb(204, 204, 204)" stroke-width="1px"></line>
+                        <line x1="247.5" y1="0" x2="247.5" y2="5" style="visibility: inherit;" fill="rgb(0, 0, 0)"
+                              stroke="rgb(204, 204, 204)" stroke-width="1px"></line>
+                        <line x1="278.4375" y1="0" x2="278.4375" y2="5" style="visibility: inherit;" fill="rgb(0, 0, 0)"
+                              stroke="rgb(204, 204, 204)" stroke-width="1px"></line>
+                    </g>
+                    <g transform="translate(0, 8)">
+                        <text x="0" y="0" dx="0em" dy="0.95em"
+                              style="text-anchor: middle; visibility: hidden; font-family: Roboto, sans-serif; font-size: 12px; font-weight: 200;"
+                              fill="rgb(50, 49, 63)" stroke="none" stroke-width="1px">0
+                        </text>
+                        <text x="30.9375" y="0" dx="0em" dy="0.95em"
+                              style="text-anchor: middle; visibility: inherit; font-family: Roboto, sans-serif; font-size: 12px; font-weight: 200;"
+                              fill="rgb(50, 49, 63)" stroke="none" stroke-width="1px">500
+                        </text>
+                        <text x="61.875" y="0" dx="0em" dy="0.95em"
+                              style="text-anchor: middle; visibility: inherit; font-family: Roboto, sans-serif; font-size: 12px; font-weight: 200;"
+                              fill="rgb(50, 49, 63)" stroke="none" stroke-width="1px">1k
+                        </text>
+                        <text x="92.8125" y="0" dx="0em" dy="0.95em"
+                              style="text-anchor: middle; visibility: inherit; font-family: Roboto, sans-serif; font-size: 12px; font-weight: 200;"
+                              fill="rgb(50, 49, 63)" stroke="none" stroke-width="1px">1.5k
+                        </text>
+                        <text x="123.75" y="0" dx="0em" dy="0.95em"
+                              style="text-anchor: middle; visibility: inherit; font-family: Roboto, sans-serif; font-size: 12px; font-weight: 200;"
+                              fill="rgb(50, 49, 63)" stroke="none" stroke-width="1px">2k
+                        </text>
+                        <text x="154.6875" y="0" dx="0em" dy="0.95em"
+                              style="text-anchor: middle; visibility: inherit; font-family: Roboto, sans-serif; font-size: 12px; font-weight: 200;"
+                              fill="rgb(50, 49, 63)" stroke="none" stroke-width="1px">2.5k
+                        </text>
+                        <text x="185.625" y="0" dx="0em" dy="0.95em"
+                              style="text-anchor: middle; visibility: inherit; font-family: Roboto, sans-serif; font-size: 12px; font-weight: 200;"
+                              fill="rgb(50, 49, 63)" stroke="none" stroke-width="1px">3k
+                        </text>
+                        <text x="216.5625" y="0" dx="0em" dy="0.95em"
+                              style="text-anchor: middle; visibility: inherit; font-family: Roboto, sans-serif; font-size: 12px; font-weight: 200;"
+                              fill="rgb(50, 49, 63)" stroke="none" stroke-width="1px">3.5k
+                        </text>
+                        <text x="247.5" y="0" dx="0em" dy="0.95em"
+                              style="text-anchor: middle; visibility: inherit; font-family: Roboto, sans-serif; font-size: 12px; font-weight: 200;"
+                              fill="rgb(50, 49, 63)" stroke="none" stroke-width="1px">4k
+                        </text>
+                        <text x="278.4375" y="0" dx="0em" dy="0.95em"
+                              style="text-anchor: middle; visibility: hidden; font-family: Roboto, sans-serif; font-size: 12px; font-weight: 200;"
+                              fill="rgb(50, 49, 63)" stroke="none" stroke-width="1px">4.5k
+                        </text>
+                    </g>
+                    <line x1="0" y1="0" x2="278.4375" y2="0" fill="rgb(0, 0, 0)" stroke="rgb(204, 204, 204)"
+                          stroke-width="1px"></line>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

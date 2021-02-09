@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: lpr-images-pvc-template-lam1
+  name: lpr-images-pvc-template-blank-lam5
 spec:
   dataSource:
     name: lpr-images-pvc
@@ -17,7 +17,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: lpr-train-template-lam1
+  name: lpr-train-template-blank-lam5
 spec:
   template:
     metadata:
@@ -27,15 +27,15 @@ spec:
       restartPolicy: Never
       containers:
         - name: lpr
-          image: registry.datexis.com/tsteffek/licenseplatereconstructor:ea44e901d11b8a02eba34b7c91a15024ad2e2361
+          image: registry.datexis.com/tsteffek/licenseplatereconstructor:e1f05dacd78c2487bca4520bd3c1ca1962ad277a
           command: [ "python" ]
           args: [ "bin/TrainLPR.py",
                   "--ocr_path", "/var/lib/models/OCR/ranged-7-10/lightning_logs/version_9/checkpoints/epoch=6-step=3422.ckpt",
                   "--path", "/var/lib/images",
                   "--early_stopping",
-                  "--max_epochs", "100",
-                  "--min_epochs", "20",
-                  "--default_root_dir", "/var/lib/models/lpr/default",
+                  "--max_epochs", "20",
+                  "--min_epochs", "5",
+                  "--default_root_dir", "/var/lib/models/lpr/blank",
                   "--batch_size", "480",
                   "--lr", "0.0001",
                   "--gpus", "-1",
@@ -43,9 +43,9 @@ spec:
                   "--progress_bar_refresh_ratio", "0.1",
                   "--limit_val_batches", "0.1",
                   "--use_template",
-                  "--lam", "1",
-                  "--template_path", "templates/template.jpg"
-            #                                          "--template_path", "templates/template_trans.jpg"
+                  "--lam", "5",
+            #                  "--template_path", "templates/template.jpg"
+                  "--template_path", "templates/template_blank.jpg"
             #                  "--auto_lr_find" # 0.002754228703338169
             #                  "--overfit_batches", "10",
             #                  "--accelerator", "ddp"
@@ -70,7 +70,7 @@ spec:
             claimName: ocr-models-pvc
         - name: lpr-images
           persistentVolumeClaim:
-            claimName: lpr-images-pvc-template-lam1
+            claimName: lpr-images-pvc-template-blank-lam5
         - name: dshm
           emptyDir:
             medium: Memory
